@@ -37,8 +37,6 @@ log:
   duration: duration
   fields: app,service,userId,username
   goroutines: true
-  map:
-    time: "@timestamp"
 
 middleware:
   log: true
@@ -73,6 +71,8 @@ code:
 role:
   handler:
     master: false
+    id: roleId
+    name: roleName
   loader:
     id: roleId
     name: roleName
@@ -114,32 +114,3 @@ audit_log:
     true: success
     false: fail
     goroutines: true
-
-client:
-  insecure: true
-  timeout: 5
-  log: false
-  single: true
-  size: size
-  status: status
-
-audit_log_client:
-  schema:
-    id: id
-    user: userid
-    ip: ip
-    resource: resourcetype
-    action: action
-    timestamp: timestamp
-    status: status
-    desc: remark
-  config:
-    user: userId
-    ip: ip
-    true: successs
-    false: fail
-    goroutines: true
-  retry:
-    1: 5
-    2: 7
-    3: 9

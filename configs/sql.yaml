@@ -33,7 +33,5 @@ sql:
       inner join modules m on rm.moduleId = m.moduleId
     where u.userId = ? and u.status = 'A' and r.status = 'A' and rm.moduleId = ? and m.status = 'A'
     order by sequence
-  user: select count(username) from users where username = ? and userId != ?
   role:
     check: select userId from userRoles where roleId = ? limit 1
-    duplicate: select count(roleId) from roles where roleName = ? and roleId != ?

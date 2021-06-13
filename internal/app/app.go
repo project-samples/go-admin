@@ -63,14 +63,6 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	}
 
 	validator := v10.NewValidator()
-	/*
-		c, er3 := client.NewClient(conf.Client)
-		if er3 != nil {
-			return nil, er3
-		}
-		retries := config.DurationsFromValue(conf.AuditClient.Retry, "Retry", 9)
-		logWriter := sv.NewActivityLogClient(c, "http://localhost:8088/mock", conf.AuditClient.Config, conf.AuditClient.Schema, generator, logError, nil, retries...)
-	*/
 	sqlPrivilegeLoader := NewPrivilegeLoader(db, conf.Sql.PermissionsByUser)
 
 	userId := conf.Tracking.User
@@ -91,13 +83,14 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 
 	privilegeReader := as.NewPrivilegesReader(db, conf.Sql.Privileges)
 	privilegeHandler := auth.NewPrivilegesHandler(privilegeReader.Privileges)
-	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
-	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
-	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
 	codeLoader := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
 	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
+
+	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
+	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
+	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
 	roleService := uam.NewRoleService(db, conf.Sql.Role.Check)
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(uam.Role{}), validator.Validate)
@@ -106,8 +99,8 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	roleHandler := uam.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
 	userService := uam.NewUserService(db)
-	// userValidator := uam.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(uam.User{}), validator.Validate)
-	userValidator := uam.NewUserValidator(db, conf.Sql.User, validator.Validate)
+	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(uam.User{}), validator.Validate)
+	// userValidator := uam.NewUserValidator(db, conf.Sql.User, validator.Validate)
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := uam.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 

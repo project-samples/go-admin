@@ -38,10 +38,8 @@ type SqlStatement struct {
 	Privileges        string        `mapstructure:"privileges"`
 	PrivilegesByUser  string        `mapstructure:"privileges_by_user"`
 	PermissionsByUser string        `mapstructure:"permissions_by_user"`
-	User              string        `mapstructure:"user"`
 	Role              RoleStatement `mapstructure:"role"`
 }
 type RoleStatement struct {
-	Duplicate string `mapstructure:"duplicate"`
 	Check     string `mapstructure:"check"`
 }
