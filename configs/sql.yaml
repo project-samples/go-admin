@@ -1,0 +1,39 @@
+auth:
+  query: select userId as id, username, email, displayName as displayname, status from users where username = ?
+  pass: update users set lastLogin = ? where userId = ?
+  disable: I
+
+sql:
+  privileges: |
+    select moduleId as id,
+      moduleName as name,
+      resourceKey as resource_key,
+      path,
+      icon,
+      parent,
+      sequence
+    from modules
+    where status = 'A'
+  privileges_by_user: |
+    select distinct m.moduleId as id, m.moduleName as name, m.resourceKey as resource_key,
+      m.path, m.icon, m.parent, m.sequence, rm.permissions
+    from users u
+      inner join userRoles ur on u.userId = ur.userId
+      inner join roles r on ur.roleId = r.roleId
+      inner join roleModules rm on r.roleId = rm.roleId
+      inner join modules m on rm.moduleId = m.moduleId
+    where u.userId = ? and r.status = 'A' and m.status = 'A'
+    order by sequence
+  permissions_by_user: |
+    select distinct rm.permissions
+    from users u
+      inner join userRoles ur on u.userId = ur.userId
+      inner join roles r on ur.roleId = r.roleId
+      inner join roleModules rm on r.roleId = rm.roleId
+      inner join modules m on rm.moduleId = m.moduleId
+    where u.userId = ? and u.status = 'A' and r.status = 'A' and rm.moduleId = ? and m.status = 'A'
+    order by sequence
+  user: select count(username) from users where username = ? and userId != ?
+  role:
+    check: select userId from userRoles where roleId = ? limit 1
+    duplicate: select count(roleId) from roles where roleName = ? and roleId != ?

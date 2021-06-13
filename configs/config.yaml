@@ -1,0 +1,145 @@
+server:
+  name: go-backoffice
+  port: 8080
+security_skip: false
+
+ldap:
+  server: ldap.forumsys.com:389
+  base_dn: dc=example,dc=com
+  tls: false
+  insecure_skip_verify: false
+  display_name: displayName
+  users: test01,test02
+  timeout: 3000
+token:
+  secret: secretbackoffice
+  expires: 86400000
+payload:
+  ip: ip
+  user_id: userId
+  username: username
+  email: email
+  user_type: roleId
+status:
+  timeout: -1
+  not_found: 0
+  fail: 0
+  success: 1
+  disabled: 2
+  error: 4
+
+db:
+  driver: mysql
+  data_source_name: devadmin:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
+
+log:
+  level: info
+  duration: duration
+  fields: app,service,userId,username
+  goroutines: true
+  map:
+    time: "@timestamp"
+
+middleware:
+  log: true
+  skips: /health,/authenticate
+  request: request
+  response: response
+  masks: userId,username
+  constants:
+    app: "backoffice"
+    service: back-office
+  map:
+    userId: userId
+    username: username
+
+tracking:
+  user: userId
+  created_by: CreatedBy
+  created_at: CreatedAt
+  updated_by: UpdatedBy
+  updated_at: UpdatedAt
+
+code:
+  handler:
+    master: true
+  loader:
+    master: master
+    id: code
+    name: name
+    sequence: sequence
+    status: status
+    active: A
+role:
+  handler:
+    master: false
+  loader:
+    id: roleId
+    name: roleName
+    sequence: roleName
+    status: status
+    active: A
+
+auto_role_id: false
+auto_user_id: false
+
+writer:
+  status:
+    success: 1
+    version_error: 2
+    error: 4
+  action:
+    load: load
+    create: create
+    update: update
+    patch: patch
+    delete: delete
+audit_log:
+  log: true
+  db:
+    driver: mysql
+    data_source_name: devadmin:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
+  schema:
+    id: id
+    user: userid
+    ip: ip
+    resource: resourcetype
+    action: action
+    timestamp: timestamp
+    status: status
+    desc: remark
+  config:
+    user: userId
+    ip: ip
+    true: success
+    false: fail
+    goroutines: true
+
+client:
+  insecure: true
+  timeout: 5
+  log: false
+  single: true
+  size: size
+  status: status
+
+audit_log_client:
+  schema:
+    id: id
+    user: userid
+    ip: ip
+    resource: resourcetype
+    action: action
+    timestamp: timestamp
+    status: status
+    desc: remark
+  config:
+    user: userId
+    ip: ip
+    true: successs
+    false: fail
+    goroutines: true
+  retry:
+    1: 5
+    2: 7
+    3: 9
