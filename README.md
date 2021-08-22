@@ -1,1 +1,1 @@
-# go-backoffice
+# go-admin

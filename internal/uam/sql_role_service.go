@@ -102,8 +102,8 @@ func BuildInsertStatements(ctx context.Context, db *sql.DB, obj interface{}, bui
 		return nil, er1
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildInsert("roles", obj, 0, buildParam))
-	query, args, er2 := s.BuildInsertBatch(db, "roleModules", modules, 0, buildParam)
+	sts.Add(s.BuildToInsert("roles", obj, 0, buildParam))
+	query, args, er2 := s.BuildToInsertBatch(db, "roleModules", modules, buildParam)
 	if er2 != nil {
 		return nil, er2
 	}
@@ -120,12 +120,12 @@ func BuildUpdateStatements(ctx context.Context, db *sql.DB, obj interface{}, bui
 		return nil, err
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildUpdate("roles", obj, 0, buildParam))
+	sts.Add(s.BuildToUpdate("roles", obj, 0, buildParam))
 
 	deleteModules := fmt.Sprintf("delete from roleModules where roleId = %s", buildParam(1))
 	sts.Add(deleteModules, []interface{}{role.RoleId})
 
-	query, args, er2 := s.BuildInsertBatch(db, "roleModules", modules, 0, buildParam)
+	query, args, er2 := s.BuildToInsertBatch(db, "roleModules", modules, buildParam)
 	if er2 != nil {
 		return nil, er2
 	}
