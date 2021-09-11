@@ -1,4 +1,4 @@
-package uam
+package role
 
 import "github.com/core-go/search"
 

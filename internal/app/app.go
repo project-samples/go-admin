@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	role2 "go-service/internal/role"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -33,7 +34,7 @@ type ApplicationContext struct {
 	PrivilegesHandler     *auth.PrivilegesHandler
 	CodeHandler           *code.Handler
 	RolesHandler          *code.Handler
-	RoleHandler           *uam.RoleHandler
+	RoleHandler           *role2.RoleHandler
 	UserHandler           *uam.UserHandler
 }
 
@@ -92,11 +93,11 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
-	roleService := uam.NewRoleService(db, conf.Sql.Role.Check)
-	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(uam.Role{}), validator.Validate)
+	roleService := role2.NewRoleService(db, conf.Sql.Role.Check)
+	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(role2.Role{}), validator.Validate)
 	// roleValidator := uam.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
-	roleHandler := uam.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
+	roleHandler := role2.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
 	userService := uam.NewUserService(db)
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(uam.User{}), validator.Validate)

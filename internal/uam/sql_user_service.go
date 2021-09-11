@@ -155,7 +155,17 @@ func (s *SqlUserService) Delete(ctx context.Context, id interface{}) (int64, err
 	}
 	return sts.Exec(ctx, s.db)
 }
-
+func CheckExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
+	rows, err := db.Query(sql, args...)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		return true, nil
+	}
+	return false, nil
+}
 func BuildDeleteUserStatements(id interface{}, buildParam func(int) string) (s.Statements, error) {
 	roleId, ok := id.(string)
 	if !ok {
