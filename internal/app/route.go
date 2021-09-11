@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	role        = "role"
-	user        = "user"
+	role = "role"
+	user = "user"
 )
 
 func Route(r *mux.Router, ctx context.Context, conf Root) error {

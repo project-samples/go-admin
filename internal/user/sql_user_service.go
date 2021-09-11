@@ -1,15 +1,16 @@
-package uam
+package user
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/core-go/search"
 	sv "github.com/core-go/service"
 	s "github.com/core-go/sql"
 	"github.com/core-go/sql/query"
-	"reflect"
-	"strings"
 )
 
 type SqlUserService struct {

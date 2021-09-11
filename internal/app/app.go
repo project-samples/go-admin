@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	role2 "go-service/internal/role"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -21,7 +20,8 @@ import (
 	s "github.com/core-go/sql"
 	_ "github.com/go-sql-driver/mysql"
 
-	"go-service/internal/uam"
+	r "go-service/internal/role"
+	u "go-service/internal/user"
 )
 
 type ApplicationContext struct {
@@ -34,8 +34,8 @@ type ApplicationContext struct {
 	PrivilegesHandler     *auth.PrivilegesHandler
 	CodeHandler           *code.Handler
 	RolesHandler          *code.Handler
-	RoleHandler           *role2.RoleHandler
-	UserHandler           *uam.UserHandler
+	RoleHandler           *r.RoleHandler
+	UserHandler           *u.UserHandler
 }
 
 func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
@@ -93,17 +93,17 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
-	roleService := role2.NewRoleService(db, conf.Sql.Role.Check)
-	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(role2.Role{}), validator.Validate)
-	// roleValidator := uam.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
+	roleService := r.NewRoleService(db, conf.Sql.Role.Check)
+	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
+	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
-	roleHandler := role2.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
+	roleHandler := r.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
-	userService := uam.NewUserService(db)
-	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(uam.User{}), validator.Validate)
-	// userValidator := uam.NewUserValidator(db, conf.Sql.User, validator.Validate)
+	userService := u.NewUserService(db)
+	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
+	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
 	generateUserId := shortid.Func(conf.AutoUserId)
-	userHandler := uam.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
+	userHandler := u.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
 	app := &ApplicationContext{
 		HealthHandler:         healthHandler,
