@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"go-service/internal/audit-log"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -36,6 +37,7 @@ type ApplicationContext struct {
 	RolesHandler          *code.Handler
 	RoleHandler           *r.RoleHandler
 	UserHandler           *u.UserHandler
+	AuditLogHandler       *audit.AuditLogHandler
 }
 
 func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
@@ -105,6 +107,13 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
+	reportDB, er3 := s.Open(conf.AuditLog.DB)
+	if er3 != nil {
+		return nil, er3
+	}
+	auditLogService := audit.NewAuditLogService(reportDB)
+	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
+
 	app := &ApplicationContext{
 		HealthHandler:         healthHandler,
 		SkipSecurity:          conf.SecuritySkip,
@@ -117,6 +126,7 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 		RolesHandler:          rolesHandler,
 		RoleHandler:           roleHandler,
 		UserHandler:           userHandler,
+		AuditLogHandler:       auditLogHandler,
 	}
 	return app, nil
 }

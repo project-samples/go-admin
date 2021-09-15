@@ -23,6 +23,7 @@ type SqlRoleService struct {
 	BuildParam  func(int) string
 	CheckDelete string
 	modelType   reflect.Type
+	Driver      string
 }
 
 func NewRoleService(db *sql.DB, checkDelete string) *SqlRoleService {
@@ -34,7 +35,8 @@ func NewRoleService(db *sql.DB, checkDelete string) *SqlRoleService {
 	genericService := s.NewWriter(db, tableName, modelType)
 	sql := s.ReplaceQueryArgs(s.GetDriver(db), checkDelete)
 	buildParam := s.GetBuild(db)
-	return &SqlRoleService{db: db, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType}
+	driver := s.GetDriver(db)
+	return &SqlRoleService{db: db, Driver: driver, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType}
 }
 
 func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{}, error) {
@@ -55,14 +57,14 @@ func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{},
 	return role, nil
 }
 func (s *SqlRoleService) Insert(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildInsertStatements(ctx, s.db, obj, s.BuildParam)
+	sts, err := BuildInsertStatements(ctx, obj, s.Driver, s.BuildParam)
 	if err != nil {
 		return 0, err
 	}
 	return sts.Exec(ctx, s.db)
 }
 func (s *SqlRoleService) Update(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildUpdateStatements(ctx, s.db, obj, s.BuildParam)
+	sts, err := BuildUpdateStatements(ctx, obj, s.Driver, s.BuildParam)
 	if err != nil {
 		return 0, err
 	}
@@ -92,7 +94,7 @@ func CheckExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
 	}
 	return false, nil
 }
-func BuildInsertStatements(ctx context.Context, db *sql.DB, obj interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (s.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -102,15 +104,15 @@ func BuildInsertStatements(ctx context.Context, db *sql.DB, obj interface{}, bui
 		return nil, er1
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildToInsert("roles", obj, 0, buildParam))
-	query, args, er2 := s.BuildToInsertBatch(db, "roleModules", modules, buildParam)
+	sts.Add(s.BuildToInsert("roles", obj, buildParam))
+	query, args, er2 := s.BuildToInsertBatch("roleModules", modules, driver, buildParam)
 	if er2 != nil {
 		return nil, er2
 	}
 	sts.Add(query, args)
 	return sts, nil
 }
-func BuildUpdateStatements(ctx context.Context, db *sql.DB, obj interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (s.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -120,12 +122,11 @@ func BuildUpdateStatements(ctx context.Context, db *sql.DB, obj interface{}, bui
 		return nil, err
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildToUpdate("roles", obj, 0, buildParam))
+	sts.Add(s.BuildToUpdate("roles", obj, buildParam))
 
 	deleteModules := fmt.Sprintf("delete from roleModules where roleId = %s", buildParam(1))
 	sts.Add(deleteModules, []interface{}{role.RoleId})
-
-	query, args, er2 := s.BuildToInsertBatch(db, "roleModules", modules, buildParam)
+	query, args, er2 := s.BuildToInsertBatch("roleModules", modules, driver, buildParam)
 	if er2 != nil {
 		return nil, er2
 	}

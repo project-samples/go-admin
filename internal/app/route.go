@@ -11,6 +11,7 @@ import (
 const (
 	role = "role"
 	user = "user"
+	audit_log   = "audit-log"
 )
 
 func Route(r *mux.Router, ctx context.Context, conf Root) error {
@@ -48,6 +49,8 @@ func Route(r *mux.Router, ctx context.Context, conf Root) error {
 	HandleWithSecurity(sec, users, "/{userId}", userHandler.Patch, user, ActionWrite, PATCH)
 	HandleWithSecurity(sec, users, "/{userId}", userHandler.Delete, user, ActionWrite, DELETE)
 
+	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLogHandler.Search, audit_log, ActionRead, GET, POST)
+	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLogHandler.Search, audit_log, ActionRead, GET, POST)
 	return nil
 }
 

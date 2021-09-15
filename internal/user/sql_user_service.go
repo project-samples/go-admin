@@ -85,9 +85,9 @@ func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam 
 		return nil, err
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildToInsert("users", obj, 1, buildParam))
+	sts.Add(s.BuildToInsert("users", obj, buildParam))
 	for i, _ := range modules {
-		sts.Add(s.BuildToInsert("userroles", modules[i], 0, buildParam))
+		sts.Add(s.BuildToInsert("userRoles", modules[i], buildParam))
 	}
 	return sts, nil
 }
@@ -130,7 +130,7 @@ func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam 
 		return nil, err
 	}
 	sts := s.NewStatements(true)
-	sts.Add(s.BuildToUpdate("users", obj, 0, buildParam))
+	sts.Add(s.BuildToUpdate("users", obj, buildParam))
 
 	deleteModules := fmt.Sprintf("delete from userroles where userId = %s", buildParam(1))
 	arg1 := make([]interface{}, 0)
@@ -138,7 +138,7 @@ func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam 
 	sts.Add(deleteModules, arg1)
 
 	for i, _ := range modules {
-		sts.Add(s.BuildToInsert("userroles", modules[i], 0, buildParam))
+		sts.Add(s.BuildToInsert("userroles", modules[i], buildParam))
 	}
 	return sts, nil
 }
