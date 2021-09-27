@@ -10,7 +10,7 @@ import (
 
 	"github.com/core-go/search"
 	sv "github.com/core-go/service"
-	s "github.com/core-go/sql"
+	q "github.com/core-go/sql"
 	"github.com/core-go/sql/query"
 )
 
@@ -24,19 +24,32 @@ type SqlRoleService struct {
 	CheckDelete string
 	modelType   reflect.Type
 	Driver      string
+	Map         map[string]int
 }
 
-func NewRoleService(db *sql.DB, checkDelete string) *SqlRoleService {
+func NewRoleService(db *sql.DB, checkDelete string) (*SqlRoleService, error) {
 	var model Role
 	tableName := "roles"
 	modelType := reflect.TypeOf(model)
 	builder := query.NewBuilder(db, tableName, modelType)
-	searchService := s.NewSearcherWithQuery(db, modelType, builder.BuildQuery)
-	genericService := s.NewWriter(db, tableName, modelType)
-	sql := s.ReplaceQueryArgs(s.GetDriver(db), checkDelete)
-	buildParam := s.GetBuild(db)
-	driver := s.GetDriver(db)
-	return &SqlRoleService{db: db, Driver: driver, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType}
+	searchService, er0 := q.NewSearcherWithQuery(db, modelType, builder.BuildQuery)
+	if er0 != nil {
+		return nil, er0
+	}
+	genericService, er1 := q.NewWriter(db, tableName, modelType, nil)
+	if er1 != nil {
+		return nil, er1
+	}
+	sql := q.ReplaceQueryArgs(q.GetDriver(db), checkDelete)
+	buildParam := q.GetBuild(db)
+	driver := q.GetDriver(db)
+	var r RoleModule
+	subType := reflect.TypeOf(r)
+	m, err := q.GetColumnIndexes(subType)
+	if err != nil {
+		return nil, err
+	}
+	return &SqlRoleService{db: db, Driver: driver, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType, Map: m}, nil
 }
 
 func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{}, error) {
@@ -49,9 +62,10 @@ func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{},
 		return rs, er1
 	}
 	role, _ := rs.(*Role)
-	privileges, er2 := GetPrivileges(ctx, s.db, roleId, s.BuildParam, GetModules)
-	if er2 != nil {
-		return nil, er2
+
+	privileges, er3 := GetPrivileges(ctx, s.db, roleId, s.BuildParam, GetModules, s.Map)
+	if er3 != nil {
+		return nil, er3
 	}
 	role.Privileges = privileges
 	return role, nil
@@ -94,7 +108,7 @@ func CheckExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
 	}
 	return false, nil
 }
-func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (s.Statements, error) {
+func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (q.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -103,16 +117,16 @@ func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, 
 	if er1 != nil {
 		return nil, er1
 	}
-	sts := s.NewStatements(true)
-	sts.Add(s.BuildToInsert("roles", obj, buildParam))
-	query, args, er2 := s.BuildToInsertBatch("roleModules", modules, driver, buildParam)
+	sts := q.NewStatements(true)
+	sts.Add(q.BuildToInsert("roles", obj, buildParam, nil))
+	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, nil)
 	if er2 != nil {
 		return nil, er2
 	}
 	sts.Add(query, args)
 	return sts, nil
 }
-func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (s.Statements, error) {
+func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (q.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -121,25 +135,25 @@ func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, 
 	if err != nil {
 		return nil, err
 	}
-	sts := s.NewStatements(true)
-	sts.Add(s.BuildToUpdate("roles", obj, buildParam))
+	sts := q.NewStatements(true)
+	sts.Add(q.BuildToUpdate("roles", obj, buildParam, nil))
 
 	deleteModules := fmt.Sprintf("delete from roleModules where roleId = %s", buildParam(1))
 	sts.Add(deleteModules, []interface{}{role.RoleId})
-	query, args, er2 := s.BuildToInsertBatch("roleModules", modules, driver, buildParam)
+	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, nil)
 	if er2 != nil {
 		return nil, er2
 	}
 	sts.Add(query, args)
 	return sts, nil
 }
-func BuildDeleteStatements(id interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildDeleteStatements(id interface{}, buildParam func(int) string) (q.Statements, error) {
 	roleId, ok := id.(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid id from request")
 	}
 
-	sts := s.NewStatements(false)
+	sts := q.NewStatements(false)
 
 	deleteModules := fmt.Sprintf("delete from roleModules where roleId = %s", buildParam(1))
 	sts.Add(deleteModules, []interface{}{roleId})
@@ -161,8 +175,8 @@ func BuildModules(ctx context.Context, roleId string, privileges []string) ([]Ro
 	}
 	return modules, nil
 }
-func GetPrivileges(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string, getModules func(context.Context, *sql.DB, string, func(int) string) ([]RoleModule, error)) ([]string, error) {
-	modules, er1 := getModules(ctx, db, roleId, buildParam)
+func GetPrivileges(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string, getModules func(context.Context, *sql.DB, string, func(int) string, map[string]int) ([]RoleModule, error), m map[string]int) ([]string, error) {
+	modules, er1 := getModules(ctx, db, roleId, buildParam, m)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -182,11 +196,11 @@ func BuildPrivileges(modules []RoleModule) []string {
 	}
 	return privileges
 }
-func GetModules(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string) ([]RoleModule, error) {
+func GetModules(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string, m map[string]int) ([]RoleModule, error) {
 	var modules []RoleModule
 	p := buildParam(1)
 	query := fmt.Sprintf(`select moduleId, permissions from roleModules where roleId = %s`, p)
-	err := s.Query(ctx, db, &modules, query, roleId)
+	err := q.QueryWithMap(ctx, db, m, &modules, query, roleId)
 	return modules, err
 }
 func ToModules(menu string) RoleModule {
@@ -203,7 +217,7 @@ func ToModules(menu string) RoleModule {
 }
 
 func (s *SqlRoleService) Patch(ctx context.Context, obj map[string]interface{}) (int64, error) {
-	sts, err := BuildPatchRoleStatements(ctx, obj, s.BuildParam, s.modelType, s.db)
+	sts, err := BuildPatchRoleStatements(obj, s.BuildParam, s.modelType)
 	if err != nil {
 		return 0, err
 	}
@@ -211,21 +225,22 @@ func (s *SqlRoleService) Patch(ctx context.Context, obj map[string]interface{}) 
 	return sts.Exec(ctx, s.db)
 }
 
-func BuildPatchRoleStatements(ctx context.Context, obj map[string]interface{}, buildParam func(int) string, modelType reflect.Type, db *sql.DB) (s.Statements, error) {
-	sts := s.NewStatements(true)
-	idcolumNames, idJsonName := s.FindPrimaryKeys(modelType)
-	columNames := s.FindJsonName(modelType)
-	sts.Add(s.BuildPatch("roles", obj, columNames, idJsonName, idcolumNames, buildParam))
+func BuildPatchRoleStatements(json map[string]interface{}, buildParam func(int) string, modelType reflect.Type) (q.Statements, error) {
+	sts := q.NewStatements(true)
+	primaryKeyColumns, _ := q.FindPrimaryKeys(modelType)
+	jsonColumnMap := q.MakeJsonColumnMap(modelType)
+	columnMap := q.JSONToColumns(json, jsonColumnMap)
+	sts.Add(q.BuildToPatch("roles", columnMap, primaryKeyColumns, buildParam))
 
-	deleteModules := fmt.Sprintf("delete from rolemodules where roleId = '%s';", obj["roleId"])
+	deleteModules := fmt.Sprintf("delete from rolemodules where roleId = '%s';", json["roleId"])
 	sts.Add(deleteModules, nil)
 
-	if obj["privileges"] != nil {
-		a := obj["privileges"]
+	if json["privileges"] != nil {
+		a := json["privileges"]
 		t, _ := a.([]string)
 		for i := 0; i < len(t); i++ {
 			splitPermission := strings.Fields(t[i])
-			insertModules := fmt.Sprintf("insert into rolemodules values ('%s','%s','%s');", obj["roleId"], splitPermission[0], splitPermission[1])
+			insertModules := fmt.Sprintf("insert into rolemodules values ('%s','%s','%s');", json["roleId"], splitPermission[0], splitPermission[1])
 			sts.Add(insertModules, nil)
 		}
 	}

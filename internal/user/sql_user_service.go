@@ -9,7 +9,7 @@ import (
 
 	"github.com/core-go/search"
 	sv "github.com/core-go/service"
-	s "github.com/core-go/sql"
+	q "github.com/core-go/sql"
 	"github.com/core-go/sql/query"
 )
 
@@ -22,15 +22,18 @@ type SqlUserService struct {
 	modelType   reflect.Type
 }
 
-func NewUserService(db *sql.DB) *SqlUserService {
+func NewUserService(db *sql.DB) (*SqlUserService, error) {
 	var model User
 	tableName := "users"
 	modelType := reflect.TypeOf(model)
-	buildParam := s.GetBuild(db)
+	buildParam := q.GetBuild(db)
 	builder := query.NewBuilder(db, tableName, modelType, buildParam)
-	searchService, genericService := s.NewSearchWriter(db, tableName, modelType, builder.BuildQuery)
+	searchService, genericService, err := q.NewSearchWriter(db, tableName, modelType, builder.BuildQuery, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	return &SqlUserService{db: db, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, modelType: modelType}
+	return &SqlUserService{db: db, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, modelType: modelType}, nil
 }
 
 func (s *SqlUserService) Load(ctx context.Context, id interface{}) (interface{}, error) {
@@ -57,7 +60,7 @@ func GetRoles(ctx context.Context, db *sql.DB, userId string, buildParam func(in
 	var userRoles []UserRole
 	roles := make([]string, 0)
 	query := fmt.Sprintf(`select roleId from userRoles where userId = %s`, buildParam(1))
-	err := s.Query(ctx, db, &userRoles, query, userId)
+	err := q.Query(ctx, db, &userRoles, query, []interface{}{userId})
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +78,7 @@ func (s *SqlUserService) Insert(ctx context.Context, obj interface{}) (int64, er
 	return sts.Exec(ctx, s.db)
 }
 
-func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (q.Statements, error) {
 	user, ok := obj.(*User)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -84,10 +87,10 @@ func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam 
 	if err != nil {
 		return nil, err
 	}
-	sts := s.NewStatements(true)
-	sts.Add(s.BuildToInsert("users", obj, buildParam))
+	sts := q.NewStatements(true)
+	sts.Add(q.BuildToInsert("users", obj, buildParam, nil))
 	for i, _ := range modules {
-		sts.Add(s.BuildToInsert("userRoles", modules[i], buildParam))
+		sts.Add(q.BuildToInsert("userRoles", modules[i], buildParam, nil))
 	}
 	return sts, nil
 }
@@ -120,7 +123,7 @@ func (s *SqlUserService) Update(ctx context.Context, obj interface{}) (int64, er
 	return sts.Exec(ctx, s.db)
 }
 
-func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (q.Statements, error) {
 	user, ok := obj.(*User)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -129,8 +132,8 @@ func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam 
 	if err != nil {
 		return nil, err
 	}
-	sts := s.NewStatements(true)
-	sts.Add(s.BuildToUpdate("users", obj, buildParam))
+	sts := q.NewStatements(true)
+	sts.Add(q.BuildToUpdate("users", obj, buildParam, nil))
 
 	deleteModules := fmt.Sprintf("delete from userroles where userId = %s", buildParam(1))
 	arg1 := make([]interface{}, 0)
@@ -138,7 +141,7 @@ func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam 
 	sts.Add(deleteModules, arg1)
 
 	for i, _ := range modules {
-		sts.Add(s.BuildToInsert("userroles", modules[i], buildParam))
+		sts.Add(q.BuildToInsert("userroles", modules[i], buildParam, nil))
 	}
 	return sts, nil
 }
@@ -167,13 +170,13 @@ func CheckExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
 	}
 	return false, nil
 }
-func BuildDeleteUserStatements(id interface{}, buildParam func(int) string) (s.Statements, error) {
+func BuildDeleteUserStatements(id interface{}, buildParam func(int) string) (q.Statements, error) {
 	roleId, ok := id.(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid id from request")
 	}
 
-	sts := s.NewStatements(false)
+	sts := q.NewStatements(false)
 
 	deleteModules := fmt.Sprintf("delete from userroles where userId = %s", buildParam(1))
 	arg1 := make([]interface{}, 0)
@@ -190,7 +193,7 @@ func BuildDeleteUserStatements(id interface{}, buildParam func(int) string) (s.S
 
 /*
 func (s *SqlUserService) Patch(ctx context.Context, obj map[string]interface{}) (int64, error) {
-	sts, err := BuildPatchUserStatements(ctx, obj, s.BuildParam, s.modelType)
+	sts, err := BuildPatchUserStatements(ctx, obj, q.BuildParam, q.modelType)
 	if err != nil {
 		return 0, err
 	}
@@ -198,18 +201,19 @@ func (s *SqlUserService) Patch(ctx context.Context, obj map[string]interface{}) 
 	return sts.Exec(ctx, s.db)
 }
 */
-func BuildPatchUserStatements(ctx context.Context, obj map[string]interface{}, buildParam func(int) string, modelType reflect.Type) (s.Statements, error) {
-	sts := s.NewStatements(true)
-	idcolumNames, idJsonName := s.FindPrimaryKeys(modelType)
-	columNames := s.FindJsonName(modelType)
-	sts.Add(s.BuildPatch("users", obj, columNames, idJsonName, idcolumNames, buildParam))
-	if obj["roles"] != nil {
-		deleteModules := fmt.Sprintf("delete from userRoles where userid = '%s';", obj["userId"])
+func BuildPatchUserStatements(ctx context.Context, json map[string]interface{}, buildParam func(int) string, modelType reflect.Type) (q.Statements, error) {
+	sts := q.NewStatements(true)
+	primaryKeyColumns, _ := q.FindPrimaryKeys(modelType)
+	jsonColumnMap := q.MakeJsonColumnMap(modelType)
+	columnMap := q.JSONToColumns(json, jsonColumnMap)
+	sts.Add(q.BuildToPatch("users", columnMap, primaryKeyColumns, buildParam))
+	if json["roles"] != nil {
+		deleteModules := fmt.Sprintf("delete from userRoles where userid = '%s';", json["userId"])
 		sts.Add(deleteModules, nil)
-		a := obj["roles"]
+		a := json["roles"]
 		t, _ := a.([]string)
 		for i := 0; i < len(t); i++ {
-			insertModules := fmt.Sprintf("insert into userroles values ('%s','%s');", obj["userId"], t[i])
+			insertModules := fmt.Sprintf("insert into userroles values ('%s','%s');", json["userId"], t[i])
 			sts.Add(insertModules, nil)
 		}
 	}

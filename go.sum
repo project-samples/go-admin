@@ -42,8 +42,8 @@ github.com/core-go/security v0.1.0 h1:pYN39isCBCP+jpARmQDG26lMuQ+NqfCKIWTYdC+BR3
 github.com/core-go/security v0.1.0/go.mod h1:6jxFQTz1LpV3sO5Sa+WTw4sqJbMCsal1S6+hYvYHvMQ=
 github.com/core-go/service v0.1.3 h1:zyZrG/k3xHF6SCXnsGIZfopQW4VmGEOGx6bw8Wodjss=
 github.com/core-go/service v0.1.3/go.mod h1:LUwlp3n/9D6/w5dHoUtcndhDA73Z6dZeB7esgD0hcKs=
-github.com/core-go/sql v0.2.7 h1:wVhTL9HLaol4dua0d2hjjhFFHt6jPLucsn9L+pffqWQ=
-github.com/core-go/sql v0.2.7/go.mod h1:8hRTaaPVqey2TKPhKQyG/Gc1MVB5o2WcsslleHqPAGw=
+github.com/core-go/sql v0.2.15 h1:RVaJmkrq38oYEJr0dSL5KLjoiqvD5WAs/1FZcs6Is7M=
+github.com/core-go/sql v0.2.15/go.mod h1:8hRTaaPVqey2TKPhKQyG/Gc1MVB5o2WcsslleHqPAGw=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/go-semver v0.3.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

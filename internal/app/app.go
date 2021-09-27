@@ -95,23 +95,32 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
-	roleService := r.NewRoleService(db, conf.Sql.Role.Check)
+	roleService, er4 := r.NewRoleService(db, conf.Sql.Role.Check)
+	if er4 != nil {
+		return nil, er4
+	}
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
 	roleHandler := r.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
-	userService := u.NewUserService(db)
+	userService, er5 := u.NewUserService(db)
+	if er5 != nil {
+		return nil, er5
+	}
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
 	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
-	reportDB, er3 := s.Open(conf.AuditLog.DB)
-	if er3 != nil {
-		return nil, er3
+	reportDB, er6 := s.Open(conf.AuditLog.DB)
+	if er6 != nil {
+		return nil, er6
 	}
-	auditLogService := audit.NewAuditLogService(reportDB)
+	auditLogService, er7 := audit.NewAuditLogService(reportDB)
+	if er7 != nil {
+		return nil, er7
+	}
 	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
 
 	app := &ApplicationContext{

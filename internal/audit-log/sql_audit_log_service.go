@@ -13,11 +13,14 @@ type SqlAuditLogService struct {
 	search.SearchService
 }
 
-func NewAuditLogService(db *sql.DB) *SqlAuditLogService {
+func NewAuditLogService(db *sql.DB) (*SqlAuditLogService, error) {
 	var model AuditLog
 	tableName := "auditLog"
 	modelType := reflect.TypeOf(model)
 	builder := query.NewBuilder(db, tableName, modelType)
-	searchService := s.NewSearcherWithQuery(db, modelType, builder.BuildQuery)
-	return &SqlAuditLogService{SearchService: searchService}
+	searchService, err := s.NewSearcherWithQuery(db, modelType, builder.BuildQuery)
+	if err != nil {
+		return nil, err
+	}
+	return &SqlAuditLogService{SearchService: searchService}, nil
 }
