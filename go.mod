@@ -11,8 +11,8 @@ require (
 	github.com/core-go/search v0.2.0
 	github.com/core-go/security v0.1.0
 	github.com/core-go/service v0.1.3
-	github.com/core-go/sql v0.2.15
-	github.com/go-playground/validator/v10 v10.6.1 // indirect
+	github.com/core-go/sql v0.2.23
+	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/cors v1.7.0

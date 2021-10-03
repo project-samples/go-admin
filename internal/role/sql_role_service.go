@@ -32,7 +32,7 @@ func NewRoleService(db *sql.DB, checkDelete string) (*SqlRoleService, error) {
 	tableName := "roles"
 	modelType := reflect.TypeOf(model)
 	builder := query.NewBuilder(db, tableName, modelType)
-	searchService, er0 := q.NewSearcherWithQuery(db, modelType, builder.BuildQuery)
+	searchService, er0 := q.NewSearcherWithQuery(db, modelType, builder.BuildQuery, nil)
 	if er0 != nil {
 		return nil, er0
 	}

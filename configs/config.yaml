@@ -1,7 +1,7 @@
 server:
   name: go-admin
   port: 8080
-security_skip: false
+security_skip: true
 
 ldap:
   server: ldap.forumsys.com:389
@@ -9,7 +9,7 @@ ldap:
   tls: false
   insecure_skip_verify: false
   display_name: displayName
-  users: test01,test02,kaka,zinedine.zidane
+  users: test01,test02,kaka,zinedine.zidane,gareth.bale
   timeout: 3000
 token:
   secret: secretbackoffice
@@ -30,7 +30,7 @@ status:
 
 db:
   driver: mysql
-  data_source_name: devadmin:abcd1234@/backoffice5?charset=utf8&parseTime=True&loc=Local
+  data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
 
 log:
   level: info
@@ -98,7 +98,7 @@ audit_log:
   log: true
   db:
     driver: mysql
-    data_source_name: devadmin:abcd1234@/backoffice5?charset=utf8&parseTime=True&loc=Local
+    data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
   schema:
     id: id
     user: userid
