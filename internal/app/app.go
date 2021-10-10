@@ -41,9 +41,9 @@ type ApplicationContext struct {
 }
 
 func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
-	db, er1 := s.Open(conf.DB)
-	if er1 != nil {
-		return nil, er1
+	db, er0 := s.Open(conf.DB)
+	if er0 != nil {
+		return nil, er0
 	}
 	sqlHealthChecker := s.NewHealthChecker(db)
 	var healthHandler *Handler
@@ -53,9 +53,9 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
 
 	if conf.AuditLog.Log {
-		auditLogDB, er2 := s.Open(conf.AuditLog.DB)
-		if er2 != nil {
-			return nil, er2
+		auditLogDB, er1 := s.Open(conf.AuditLog.DB)
+		if er1 != nil {
+			return nil, er1
 		}
 		logWriter := s.NewActionLogWriter(auditLogDB, "auditLog", conf.AuditLog.Config, conf.AuditLog.Schema, generateId)
 		writeLog = logWriter.Write
@@ -75,16 +75,25 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	authorizer := NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
 	authStatus := auth.InitStatus(conf.Status)
-	ldapAuthenticator, er3 := NewDAPAuthenticatorByConfig(conf.Ldap, authStatus)
+	ldapAuthenticator, er2 := NewDAPAuthenticatorByConfig(conf.Ldap, authStatus)
+	if er2 != nil {
+		return nil, er2
+	}
+	userInfoService, er3 := as.NewSqlUserInfoByConfig(db, conf.Auth)
 	if er3 != nil {
 		return nil, er3
 	}
-	userInfoService := as.NewSqlUserInfoByConfig(db, conf.Auth)
-	privilegeLoader := as.NewSqlPrivilegesLoader(db, conf.Sql.PrivilegesByUser, 1, true)
+	privilegeLoader, er4 := as.NewSqlPrivilegesLoader(db, conf.Sql.PrivilegesByUser, 1, true)
+	if er4 != nil {
+		return nil, er4
+	}
 	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, conf.Token, conf.Payload, privilegeLoader.Load)
 	authenticationHandler := auth.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
 
-	privilegeReader := as.NewPrivilegesReader(db, conf.Sql.Privileges)
+	privilegeReader, er5 := as.NewPrivilegesReader(db, conf.Sql.Privileges)
+	if er5 != nil {
+		return nil, er5
+	}
 	privilegeHandler := auth.NewPrivilegesHandler(privilegeReader.Privileges)
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
@@ -95,31 +104,31 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
-	roleService, er4 := r.NewRoleService(db, conf.Sql.Role.Check)
-	if er4 != nil {
-		return nil, er4
+	roleService, er6 := r.NewRoleService(db, conf.Sql.Role.Check)
+	if er6 != nil {
+		return nil, er6
 	}
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
 	roleHandler := r.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
-	userService, er5 := u.NewUserService(db)
-	if er5 != nil {
-		return nil, er5
+	userService, er7 := u.NewUserService(db)
+	if er7 != nil {
+		return nil, er7
 	}
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
 	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
-	reportDB, er6 := s.Open(conf.AuditLog.DB)
-	if er6 != nil {
-		return nil, er6
+	reportDB, er8 := s.Open(conf.AuditLog.DB)
+	if er8 != nil {
+		return nil, er8
 	}
-	auditLogService, er7 := audit.NewAuditLogService(reportDB)
-	if er7 != nil {
-		return nil, er7
+	auditLogService, er9 := audit.NewAuditLogService(reportDB)
+	if er9 != nil {
+		return nil, er9
 	}
 	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
 
