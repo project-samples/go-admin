@@ -20,11 +20,13 @@ type SqlRoleService struct {
 	db *sql.DB
 	sv.GenericService
 	search.SearchService
-	BuildParam  func(int) string
-	CheckDelete string
-	modelType   reflect.Type
-	Driver      string
-	Map         map[string]int
+	BuildParam       func(int) string
+	CheckDelete      string
+	modelType        reflect.Type
+	Driver           string
+	Map              map[string]int
+	roleSchema       *q.Schema
+	roleModuleSchema *q.Schema
 }
 
 func NewRoleService(db *sql.DB, checkDelete string) (*SqlRoleService, error) {
@@ -49,7 +51,9 @@ func NewRoleService(db *sql.DB, checkDelete string) (*SqlRoleService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SqlRoleService{db: db, Driver: driver, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType, Map: m}, nil
+	roleSchema := q.CreateSchema(modelType)
+	roleModuleSchema := q.CreateSchema(subType)
+	return &SqlRoleService{db: db, Driver: driver, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, CheckDelete: sql, modelType: modelType, Map: m, roleSchema: roleSchema, roleModuleSchema: roleModuleSchema}, nil
 }
 
 func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{}, error) {
@@ -71,14 +75,14 @@ func (s *SqlRoleService) Load(ctx context.Context, id interface{}) (interface{},
 	return role, nil
 }
 func (s *SqlRoleService) Insert(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildInsertStatements(ctx, obj, s.Driver, s.BuildParam)
+	sts, err := BuildInsertStatements(ctx, obj, s.Driver, s.BuildParam, s.roleSchema, s.roleModuleSchema)
 	if err != nil {
 		return 0, err
 	}
 	return sts.Exec(ctx, s.db)
 }
 func (s *SqlRoleService) Update(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildUpdateStatements(ctx, obj, s.Driver, s.BuildParam)
+	sts, err := BuildUpdateStatements(ctx, obj, s.Driver, s.BuildParam, s.roleSchema, s.roleModuleSchema)
 	if err != nil {
 		return 0, err
 	}
@@ -108,7 +112,7 @@ func CheckExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
 	}
 	return false, nil
 }
-func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (q.Statements, error) {
+func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string, roleSchema *q.Schema, roleModuleSchema *q.Schema) (q.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -118,15 +122,15 @@ func BuildInsertStatements(ctx context.Context, obj interface{}, driver string, 
 		return nil, er1
 	}
 	sts := q.NewStatements(true)
-	sts.Add(q.BuildToInsert("roles", obj, buildParam, nil))
-	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, nil)
+	sts.Add(q.BuildToInsert("roles", obj, buildParam, roleSchema))
+	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, roleModuleSchema)
 	if er2 != nil {
 		return nil, er2
 	}
 	sts.Add(query, args)
 	return sts, nil
 }
-func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string) (q.Statements, error) {
+func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, buildParam func(int) string, roleSchema *q.Schema, roleModuleSchema *q.Schema) (q.Statements, error) {
 	role, ok := obj.(*Role)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -136,11 +140,11 @@ func BuildUpdateStatements(ctx context.Context, obj interface{}, driver string, 
 		return nil, err
 	}
 	sts := q.NewStatements(true)
-	sts.Add(q.BuildToUpdate("roles", obj, buildParam, nil))
+	sts.Add(q.BuildToUpdate("roles", obj, buildParam, roleSchema))
 
 	deleteModules := fmt.Sprintf("delete from roleModules where roleId = %s", buildParam(1))
 	sts.Add(deleteModules, []interface{}{role.RoleId})
-	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, nil)
+	query, args, er2 := q.BuildToInsertBatch("roleModules", modules, driver, roleModuleSchema)
 	if er2 != nil {
 		return nil, er2
 	}

@@ -17,9 +17,12 @@ type SqlUserService struct {
 	db *sql.DB
 	sv.GenericService
 	search.SearchService
-	BuildParam  func(int) string
-	CheckDelete string
-	modelType   reflect.Type
+	BuildParam     func(int) string
+	CheckDelete    string
+	Map            map[string]int
+	modelType      reflect.Type
+	userSchema     *q.Schema
+	userRoleSchema *q.Schema
 }
 
 func NewUserService(db *sql.DB) (*SqlUserService, error) {
@@ -32,8 +35,15 @@ func NewUserService(db *sql.DB) (*SqlUserService, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &SqlUserService{db: db, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, modelType: modelType}, nil
+	var r UserRole
+	subType := reflect.TypeOf(r)
+	m, err := q.GetColumnIndexes(subType)
+	if err != nil {
+		return nil, err
+	}
+	userSchema := q.CreateSchema(modelType)
+	userRoleSchema := q.CreateSchema(subType)
+	return &SqlUserService{db: db, GenericService: genericService, SearchService: searchService, BuildParam: buildParam, modelType: modelType, Map: m, userSchema: userSchema, userRoleSchema: userRoleSchema}, nil
 }
 
 func (s *SqlUserService) Load(ctx context.Context, id interface{}) (interface{}, error) {
@@ -46,7 +56,7 @@ func (s *SqlUserService) Load(ctx context.Context, id interface{}) (interface{},
 		return rs, er1
 	}
 	user, _ := rs.(*User)
-	roles, er3 := GetRoles(ctx, s.db, userId, s.BuildParam)
+	roles, er3 := GetRoles(ctx, s.db, userId, s.BuildParam, s.Map)
 	if er3 != nil {
 		return nil, er3
 	}
@@ -56,11 +66,11 @@ func (s *SqlUserService) Load(ctx context.Context, id interface{}) (interface{},
 	return user, nil
 }
 
-func GetRoles(ctx context.Context, db *sql.DB, userId string, buildParam func(int) string) ([]string, error) {
+func GetRoles(ctx context.Context, db *sql.DB, userId string, buildParam func(int) string, m map[string]int) ([]string, error) {
 	var userRoles []UserRole
 	roles := make([]string, 0)
 	query := fmt.Sprintf(`select roleId from userRoles where userId = %s`, buildParam(1))
-	err := q.Query(ctx, db, &userRoles, query, []interface{}{userId})
+	err := q.Query(ctx, db, &userRoles, query, []interface{}{userId}, m)
 	if err != nil {
 		return nil, err
 	}
@@ -71,14 +81,14 @@ func GetRoles(ctx context.Context, db *sql.DB, userId string, buildParam func(in
 }
 
 func (s *SqlUserService) Insert(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildInsertUserStatements(ctx, obj, s.BuildParam)
+	sts, err := BuildInsertUserStatements(ctx, obj, s.BuildParam, s.userSchema, s.userRoleSchema)
 	if err != nil {
 		return 0, err
 	}
 	return sts.Exec(ctx, s.db)
 }
 
-func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (q.Statements, error) {
+func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string, userSchema *q.Schema, userRoleSchema *q.Schema) (q.Statements, error) {
 	user, ok := obj.(*User)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
@@ -88,9 +98,9 @@ func BuildInsertUserStatements(ctx context.Context, obj interface{}, buildParam 
 		return nil, err
 	}
 	sts := q.NewStatements(true)
-	sts.Add(q.BuildToInsert("users", obj, buildParam, nil))
+	sts.Add(q.BuildToInsert("users", obj, buildParam, userSchema))
 	for i, _ := range modules {
-		sts.Add(q.BuildToInsert("userRoles", modules[i], buildParam, nil))
+		sts.Add(q.BuildToInsert("userRoles", modules[i], buildParam, userRoleSchema))
 	}
 	return sts, nil
 }
@@ -116,14 +126,14 @@ func ToUserModules(UserID string, menu string) UserRole {
 }
 
 func (s *SqlUserService) Update(ctx context.Context, obj interface{}) (int64, error) {
-	sts, err := BuildUpdateUserStatements(ctx, obj, s.BuildParam)
+	sts, err := BuildUpdateUserStatements(ctx, obj, s.BuildParam, s.userSchema, s.userRoleSchema)
 	if err != nil {
 		return 0, err
 	}
 	return sts.Exec(ctx, s.db)
 }
 
-func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string) (q.Statements, error) {
+func BuildUpdateUserStatements(ctx context.Context, obj interface{}, buildParam func(int) string, userSchema *q.Schema, userRoleSchema *q.Schema) (q.Statements, error) {
 	user, ok := obj.(*User)
 	if !ok {
 		return nil, fmt.Errorf("invalid obj model from request")
