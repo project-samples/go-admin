@@ -1,6 +1,6 @@
 server:
   name: go-admin
-  port: 8080
+  port: 8081
 security_skip: true
 
 ldap:
