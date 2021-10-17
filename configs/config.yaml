@@ -4,10 +4,10 @@ server:
 security_skip: true
 
 ldap:
+  tls: true
+  insecure_skip_verify: true
   server: ldap.forumsys.com:389
   base_dn: dc=example,dc=com
-  tls: false
-  insecure_skip_verify: false
   display_name: displayName
   users: test01,test02,kaka,zinedine.zidane,gareth.bale
   timeout: 3000

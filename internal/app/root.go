@@ -14,25 +14,25 @@ import (
 )
 
 type Root struct {
-	Server              sv.ServerConfig       `mapstructure:"server"`
-	SecuritySkip        bool                  `mapstructure:"security_skip"`
-	Ldap                LDAPConfig            `mapstructure:"ldap"`
-	Status              *StatusConfig         `mapstructure:"status"`
-	Auth                as.SqlConfig          `mapstructure:"auth"`
-	Token               TokenConfig           `mapstructure:"token"`
-	Payload             PayloadConfig         `mapstructure:"payload"`
-	DB                  sql.Config            `mapstructure:"db"`
-	Log                 log.Config            `mapstructure:"log"`
-	MiddleWare          mid.LogConfig         `mapstructure:"middleware"`
-	AutoRoleId          *bool                 `mapstructure:"auto_role_id"`
-	AutoUserId          *bool                 `mapstructure:"auto_user_id"`
-	Role                code.Config           `mapstructure:"role"`
-	Code                code.Config           `mapstructure:"code"`
-	AuditLog            sql.ActionLogConf     `mapstructure:"audit_log"`
-	AuditClient         audit.AuditLogClient  `mapstructure:"audit_client"`
-	Writer              sv.WriterConfig       `mapstructure:"writer"`
-	Tracking            TrackingConfig        `mapstructure:"tracking"`
-	Sql                 SqlStatement          `mapstructure:"sql"`
+	Server       sv.ServerConf        `mapstructure:"server"`
+	SecuritySkip bool                 `mapstructure:"security_skip"`
+	Ldap         LDAPConfig           `mapstructure:"ldap"`
+	Status       *StatusConfig        `mapstructure:"status"`
+	Auth         as.SqlConfig         `mapstructure:"auth"`
+	Token        TokenConfig          `mapstructure:"token"`
+	Payload      PayloadConfig        `mapstructure:"payload"`
+	DB           sql.Config           `mapstructure:"db"`
+	Log          log.Config           `mapstructure:"log"`
+	MiddleWare   mid.LogConfig        `mapstructure:"middleware"`
+	AutoRoleId   *bool                `mapstructure:"auto_role_id"`
+	AutoUserId   *bool                `mapstructure:"auto_user_id"`
+	Role         code.Config          `mapstructure:"role"`
+	Code         code.Config          `mapstructure:"code"`
+	AuditLog     sql.ActionLogConf    `mapstructure:"audit_log"`
+	AuditClient  audit.AuditLogClient `mapstructure:"audit_client"`
+	Writer       sv.WriterConfig      `mapstructure:"writer"`
+	Tracking     TrackingConfig       `mapstructure:"tracking"`
+	Sql          SqlStatement         `mapstructure:"sql"`
 }
 type SqlStatement struct {
 	Privileges        string        `mapstructure:"privileges"`
@@ -41,5 +41,5 @@ type SqlStatement struct {
 	Role              RoleStatement `mapstructure:"role"`
 }
 type RoleStatement struct {
-	Check     string `mapstructure:"check"`
+	Check string `mapstructure:"check"`
 }

@@ -23,10 +23,10 @@ func NewUserHandler(
 		validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
 		tracking builder.TrackingConfig,
 		writeLog func(context.Context, string, string, bool, string) error) *UserHandler {
-	searchModelType := reflect.TypeOf(UserSM{})
+	searchModelType := reflect.TypeOf(UserFilter{})
 	modelType := reflect.TypeOf(User{})
 	searchHandler := search.NewJSONSearchHandler(userService.Search, modelType, searchModelType, logError, nil)
 	modelBuilder := builder.NewDefaultModelBuilderByConfig(generateId, modelType, tracking)
-	genericHandler := sv.NewGenericHandlerWithConfig(userService, modelType, conf.Status, modelBuilder, logError, validate, writeLog)
+	genericHandler := sv.NewHandlerWithConfig(userService, modelType, conf.Status, modelBuilder, logError, validate, writeLog)
 	return &UserHandler{genericHandler, searchHandler, userService}
 }

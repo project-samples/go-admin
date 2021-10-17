@@ -23,10 +23,10 @@ func NewRoleHandler(
 		validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
 		tracking builder.TrackingConfig,
 		writeLog func(context.Context, string, string, bool, string) error) *RoleHandler {
-	searchModelType := reflect.TypeOf(RoleSM{})
+	searchModelType := reflect.TypeOf(RoleFilter{})
 	modelType := reflect.TypeOf(Role{})
 	searchHandler := search.NewJSONSearchHandler(roleService.Search, modelType, searchModelType, logError, nil)
 	modelBuilder := builder.NewDefaultModelBuilderByConfig(generateId, modelType, tracking)
-	genericHandler := sv.NewGenericHandlerWithConfig(roleService, modelType, conf.Status, modelBuilder, logError, validate, writeLog)
+	genericHandler := sv.NewHandlerWithConfig(roleService, modelType, conf.Status, modelBuilder, logError, validate, writeLog)
 	return &RoleHandler{GenericHandler: genericHandler, SearchHandler: searchHandler, service: roleService}
 }

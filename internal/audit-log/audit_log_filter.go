@@ -2,8 +2,8 @@ package audit
 
 import "github.com/core-go/search"
 
-type AuditLogSM struct {
-	*search.SearchModel
+type AuditLogFilter struct {
+	*search.Filter
 	Resource  string            `json:"resource,omitempty" gorm:"column:resourcetype" bson:"resource,omitempty" dynamodbav:"resource,omitempty" firestore:"resource,omitempty" match:"equal"`
 	UserId    string            `json:"userId,omitempty" gorm:"column:userid;primary_key" bson:"userId,omitempty" dynamodbav:"userId,omitempty" firestore:"userId,omitempty"`
 	Ip        string            `json:"ip,omitempty" gorm:"column:ip" bson:"ip,omitempty" dynamodbav:"ip,omitempty" firestore:"ip,omitempty" match:"equal"`
