@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"go-service/internal/audit-log"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -21,8 +20,9 @@ import (
 	s "github.com/core-go/sql"
 	_ "github.com/go-sql-driver/mysql"
 
-	r "go-service/internal/role"
-	u "go-service/internal/user"
+	"go-service/internal/usecase/audit-log"
+	r "go-service/internal/usecase/role"
+	u "go-service/internal/usecase/user"
 )
 
 type ApplicationContext struct {
