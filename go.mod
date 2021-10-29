@@ -15,6 +15,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/mux v1.8.0
+	github.com/lib/pq v1.10.3 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125 // indirect
 	go.uber.org/zap v1.17.0 // indirect

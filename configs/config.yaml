@@ -29,8 +29,9 @@ status:
   error: 4
 
 db:
-  driver: mysql
-  data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
+  driver: postgres
+  data_source_name: user=postgres password=postgres dbname=backoffice sslmode=disable
+#  data_source_name: postgres://hcawnigp:YTLlSqbye6pMuWNgI0GHoi8IQHacgUaW@satao.db.elephantsql.com/hcawnigp
 
 log:
   level: info
@@ -97,8 +98,9 @@ writer:
 audit_log:
   log: true
   db:
-    driver: mysql
-    data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
+    driver: postgres
+    data_source_name: user=postgres password=postgres dbname=backoffice sslmode=disable
+  #    data_source_name: postgres://hcawnigp:YTLlSqbye6pMuWNgI0GHoi8IQHacgUaW@satao.db.elephantsql.com/hcawnigp
   schema:
     id: id
     user: userid
