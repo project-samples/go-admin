@@ -18,7 +18,9 @@ import (
 	"github.com/core-go/service/unique"
 	v10 "github.com/core-go/service/v10"
 	s "github.com/core-go/sql"
+	"github.com/core-go/sql/query"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
 	"go-service/internal/usecase/audit-log"
 	r "go-service/internal/usecase/role"
@@ -35,8 +37,8 @@ type ApplicationContext struct {
 	PrivilegesHandler     *auth.PrivilegesHandler
 	CodeHandler           *code.Handler
 	RolesHandler          *code.Handler
-	RoleHandler           *r.RoleHandler
-	UserHandler           *u.UserHandler
+	RoleHandler           r.RoleHandler
+	UserHandler           u.UserHandler
 	AuditLogHandler       *audit.AuditLogHandler
 }
 
@@ -64,7 +66,7 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	} else {
 		healthHandler = NewHandler(sqlHealthChecker)
 	}
-
+	buildParam := s.GetBuild(db)
 	validator := v10.NewValidator()
 	sqlPrivilegeLoader := NewPrivilegeLoader(db, conf.Sql.PermissionsByUser)
 
@@ -110,8 +112,11 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	}
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
+	roleType := reflect.TypeOf(r.Role{})
+	roleBuilder := query.NewBuilder(db, "roles", roleType, buildParam)
+	roleSearchBuilder, err := s.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
-	roleHandler := r.NewRoleHandler(roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
+	roleHandler := r.NewRoleHandler(roleSearchBuilder.Search, roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
 	userService, er7 := u.NewUserService(db)
 	if er7 != nil {
@@ -119,8 +124,14 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	}
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
 	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
+	userType := reflect.TypeOf(u.User{})
+	builder := query.NewBuilder(db, "users", userType, buildParam)
+	userSearchBuilder, err := s.NewSearchBuilder(db, userType, builder.BuildQuery)
+	if err != nil {
+		return nil, err
+	}
 	generateUserId := shortid.Func(conf.AutoUserId)
-	userHandler := u.NewUserHandler(userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
+	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
 	reportDB, er8 := s.Open(conf.AuditLog.DB)
 	if er8 != nil {

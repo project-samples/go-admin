@@ -20,8 +20,3 @@ type User struct {
 	LastLogin   *time.Time `json:"lastLogin,omitempty" gorm:"lastLogin" bson:"lastLogin,omitempty" dynamodbav:"lastLogin,omitempty" firestore:"lastLogin,omitempty"`
 	Roles       []string   `json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
 }
-
-type UserRole struct {
-	UserId string `json:"userId,omitempty" gorm:"column:userId;primary_key" bson:"_id,omitempty" validate:"required,max=20,code"`
-	RoleId string `json:"roleId,omitempty" gorm:"column:roleId;primary_key" bson:"_id,omitempty" dynamodbav:"roleId,omitempty" firestore:"roleId,omitempty" validate:"max=40"`
-}
