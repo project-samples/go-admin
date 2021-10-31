@@ -1,7 +1,7 @@
 server:
   name: go-admin
   port: 8080
-security_skip: true
+security_skip: false
 
 ldap:
   tls: true
@@ -29,8 +29,8 @@ status:
   error: 4
 
 db:
-  driver: postgres
-  data_source_name: user=postgres password=postgres dbname=backoffice sslmode=disable
+  driver: mysql
+  data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
 #  data_source_name: postgres://hcawnigp:YTLlSqbye6pMuWNgI0GHoi8IQHacgUaW@satao.db.elephantsql.com/hcawnigp
 
 log:
@@ -98,8 +98,8 @@ writer:
 audit_log:
   log: true
   db:
-    driver: postgres
-    data_source_name: user=postgres password=postgres dbname=backoffice sslmode=disable
+    driver: mysql
+    data_source_name: root:abcd1234@/backoffice?charset=utf8&parseTime=True&loc=Local
   #    data_source_name: postgres://hcawnigp:YTLlSqbye6pMuWNgI0GHoi8IQHacgUaW@satao.db.elephantsql.com/hcawnigp
   schema:
     id: id

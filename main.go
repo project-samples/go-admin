@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/core-go/config"
 	mid "github.com/core-go/log/middleware"
+	"github.com/core-go/log/strings"
 	"github.com/core-go/log/zap"
 	sv "github.com/core-go/service"
 	"github.com/gorilla/mux"
@@ -26,7 +27,7 @@ func main() {
 	r.Use(func(handler http.Handler) http.Handler {
 		return mid.BuildContextWithMask(handler, MaskLog)
 	})
-	logger := mid.NewStructuredLogger()
+	logger := mid.NewLogger()
 	if log.IsInfoEnable() {
 		r.Use(mid.Logger(conf.MiddleWare, log.InfoFields, logger))
 	}
@@ -49,5 +50,5 @@ func main() {
 }
 
 func MaskLog(name, s string) string {
-	return mid.Mask(s, 1, 6, "x")
+	return strings.Mask(s, 1, 6, "x")
 }

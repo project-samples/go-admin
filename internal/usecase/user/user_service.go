@@ -113,7 +113,7 @@ func getRoles(ctx context.Context, db *sql.DB, userId string, buildParam func(in
 	var userRoles []userRole
 	roles := make([]string, 0)
 	query := fmt.Sprintf(`select roleId from userRoles where userId = %s`, buildParam(1))
-	err := q.Query(ctx, db, &userRoles, query, []interface{}{userId}, m)
+	err := q.Query(ctx, db, m, &userRoles, query, userId)
 	if err != nil {
 		return nil, err
 	}

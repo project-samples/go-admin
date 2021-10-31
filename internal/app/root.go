@@ -9,7 +9,7 @@ import (
 	"github.com/core-go/log/zap"
 	sv "github.com/core-go/service"
 	"github.com/core-go/service/audit"
-	. "github.com/core-go/service/model-builder"
+	. "github.com/core-go/service/builder"
 	"github.com/core-go/sql"
 )
 

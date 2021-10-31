@@ -197,7 +197,7 @@ func getModules(ctx context.Context, db *sql.DB, roleId string, buildParam func(
 	var modules []RoleModule
 	p := buildParam(1)
 	query := fmt.Sprintf(`select moduleId, permissions from roleModules where roleId = %s`, p)
-	err := q.QueryWithMap(ctx, db, m, &modules, query, roleId)
+	err := q.Query(ctx, db, m, &modules, query, roleId)
 	return modules, err
 }
 func toModules(menu string) RoleModule {
