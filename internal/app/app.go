@@ -11,6 +11,7 @@ import (
 	. "github.com/core-go/health"
 	"github.com/core-go/log/zap"
 	. "github.com/core-go/security"
+	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
 	sv "github.com/core-go/service"
 	"github.com/core-go/service/shortid"
@@ -24,7 +25,7 @@ import (
 	"go-service/internal/usecase/audit-log"
 	r "go-service/internal/usecase/role"
 	u "go-service/internal/usecase/user"
-	. "go-service/pkg/jwt"
+	// . "go-service/pkg/jwt"
 )
 
 type ApplicationContext struct {
