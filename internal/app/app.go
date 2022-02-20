@@ -10,28 +10,27 @@ import (
 	"github.com/core-go/code"
 	. "github.com/core-go/health"
 	"github.com/core-go/log/zap"
+	"github.com/core-go/search/query"
 	. "github.com/core-go/security"
 	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
-	sv "github.com/core-go/service"
+	"github.com/core-go/service/authorization"
 	"github.com/core-go/service/shortid"
 	"github.com/core-go/service/unique"
 	v10 "github.com/core-go/service/v10"
 	s "github.com/core-go/sql"
-	"github.com/core-go/sql/query"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 
 	"go-service/internal/usecase/audit-log"
 	r "go-service/internal/usecase/role"
 	u "go-service/internal/usecase/user"
-	// . "go-service/pkg/jwt"
 )
 
 type ApplicationContext struct {
 	SkipSecurity          bool
 	HealthHandler         *Handler
-	AuthorizationHandler  *sv.AuthorizationHandler
+	AuthorizationHandler  *authorization.Handler
 	AuthorizationChecker  *AuthorizationChecker
 	Authorizer            *Authorizer
 	AuthenticationHandler *auth.AuthenticationHandler
@@ -73,7 +72,7 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 
 	userId := conf.Tracking.User
 	tokenService := NewTokenService()
-	authorizationHandler := sv.NewAuthorizationHandler(tokenService.GetAndVerifyToken, conf.Token.Secret)
+	authorizationHandler := authorization.NewHandler(tokenService.GetAndVerifyToken, conf.Token.Secret)
 	authorizationChecker := NewDefaultAuthorizationChecker(tokenService.GetAndVerifyToken, conf.Token.Secret, userId)
 	authorizer := NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
