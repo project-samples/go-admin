@@ -5,8 +5,8 @@ import (
 	"reflect"
 
 	"github.com/core-go/search"
+	"github.com/core-go/search/query"
 	s "github.com/core-go/sql"
-	"github.com/core-go/sql/query"
 )
 
 type AuditLogService interface {

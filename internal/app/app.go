@@ -10,6 +10,7 @@ import (
 	"github.com/core-go/code"
 	. "github.com/core-go/health"
 	"github.com/core-go/log/zap"
+	"github.com/core-go/search/convert"
 	"github.com/core-go/search/query"
 	. "github.com/core-go/security"
 	. "github.com/core-go/security/jwt"
@@ -19,6 +20,7 @@ import (
 	"github.com/core-go/service/unique"
 	v10 "github.com/core-go/service/v10"
 	s "github.com/core-go/sql"
+	"github.com/core-go/sql/template"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 
@@ -42,7 +44,7 @@ type ApplicationContext struct {
 	AuditLogHandler       *audit.AuditLogHandler
 }
 
-func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
+func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	db, er0 := s.Open(conf.DB)
 	if er0 != nil {
 		return nil, er0
@@ -102,33 +104,40 @@ func NewApp(ctx context.Context, conf Root) (*ApplicationContext, error) {
 	codeLoader := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
 	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
 
+	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
+	if err != nil {
+		return nil, err
+	}
 	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
+	roleType := reflect.TypeOf(r.Role{})
+	roleBuilder := query.NewBuilder(db, "roles", roleType, buildParam)
+	roleSearchBuilder, err := s.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
+	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
+	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	roleService, er6 := r.NewRoleService(db, conf.Sql.Role.Check)
 	if er6 != nil {
 		return nil, er6
 	}
-	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
-	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
-	roleType := reflect.TypeOf(r.Role{})
-	roleBuilder := query.NewBuilder(db, "roles", roleType, buildParam)
-	roleSearchBuilder, err := s.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
 	roleHandler := r.NewRoleHandler(roleSearchBuilder.Search, roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
+	userType := reflect.TypeOf(u.User{})
+	queryUser, err := template.UseQuery(conf.Template, query.UseQuery(db, "users", userType, buildParam), "user", templates, &userType, convert.ToMap, buildParam)
+	if err != nil {
+		return nil, err
+	}
+	userSearchBuilder, err := s.NewSearchBuilder(db, userType, queryUser)
+	if err != nil {
+		return nil, err
+	}
+	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
+	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
 	userService, er7 := u.NewUserService(db)
 	if er7 != nil {
 		return nil, er7
-	}
-	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
-	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
-	userType := reflect.TypeOf(u.User{})
-	builder := query.NewBuilder(db, "users", userType, buildParam)
-	userSearchBuilder, err := s.NewSearchBuilder(db, userType, builder.BuildQuery)
-	if err != nil {
-		return nil, err
 	}
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)

@@ -1,7 +1,8 @@
 server:
   name: go-admin
   port: 8080
-security_skip: false
+security_skip: true
+template: true
 
 ldap:
   tls: true

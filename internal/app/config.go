@@ -13,9 +13,10 @@ import (
 	"github.com/core-go/sql"
 )
 
-type Root struct {
+type Config struct {
 	Server       sv.ServerConf        `mapstructure:"server"`
 	SecuritySkip bool                 `mapstructure:"security_skip"`
+	Template     bool                 `mapstructure:"template"`
 	Ldap         LDAPConfig           `mapstructure:"ldap"`
 	Status       *StatusConfig        `mapstructure:"status"`
 	Auth         as.SqlConfig         `mapstructure:"auth"`

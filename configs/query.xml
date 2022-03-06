@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers">
+  <select id="user">
+    select *
+    from users
+    where
+    <if test="username != null">
+      username like #{username} and
+    </if>
+    <if test="displayName != null">
+      displayName like #{displayName} and
+    </if>
+    <if test="status != null">
+      status in (#{status}) and
+    </if>
+    <if test="q != null">
+      (username like #{q} or displayName like #{q} or email like #{q}) and
+    </if>
+    1 = 1
+    <if test="sort != null">
+      order by {sort}
+    </if>
+  </select>
+
+  <select id="role">
+    select *
+    from roles
+    where
+    <if test="roleName != null">
+      roleName like #{roleName} and
+    </if>
+    <if test="status != null">
+      status in (#{status}) and
+    </if>
+    <if test="q != null">
+      (roleName like #{q} or roleId like #{q} or remark like #{q}) and
+    </if>
+    1 = 1
+  </select>
+</mapper>
