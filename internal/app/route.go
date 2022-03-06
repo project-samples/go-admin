@@ -20,37 +20,35 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 		return err
 	}
 
-	r.Use(app.AuthorizationHandler.HandleAuthorization)
+	r.Use(app.Authorization.HandleAuthorization)
 	sec := &SecurityConfig{SecuritySkip: conf.SecuritySkip, Check: app.AuthorizationChecker.Check, Authorize: app.Authorizer.Authorize}
 
-	Handle(r, "/health", app.HealthHandler.Check, GET)
-	Handle(r, "/authenticate", app.AuthenticationHandler.Authenticate, POST)
+	Handle(r, "/health", app.Health.Check, GET)
+	Handle(r, "/authenticate", app.Authentication.Authenticate, POST)
 
-	r.Handle("/code/{code}", app.AuthorizationChecker.Check(http.HandlerFunc(app.CodeHandler.Load))).Methods(GET)
+	r.Handle("/code/{code}", app.AuthorizationChecker.Check(http.HandlerFunc(app.Code.Load))).Methods(GET)
 
-	HandleWithSecurity(sec, r, "/privileges", app.PrivilegesHandler.All, role, ActionRead, GET)
-	roleHandler := app.RoleHandler
+	HandleWithSecurity(sec, r, "/privileges", app.Privileges.All, role, ActionRead, GET)
 	roles := r.PathPrefix("/roles").Subrouter()
-	HandleWithSecurity(sec, roles, "/search", roleHandler.Search, role, ActionRead, POST, GET)
-	HandleWithSecurity(sec, roles, "/{roleId}", roleHandler.Load, role, ActionRead, GET)
-	HandleWithSecurity(sec, roles, "", roleHandler.Create, role, ActionWrite, POST)
-	HandleWithSecurity(sec, roles, "/{roleId}", roleHandler.Update, role, ActionWrite, PUT)
-	HandleWithSecurity(sec, roles, "/{userId}", roleHandler.Patch, user, ActionWrite, PATCH)
-	HandleWithSecurity(sec, roles, "/{roleId}", roleHandler.Delete, role, ActionWrite, DELETE)
+	HandleWithSecurity(sec, roles, "/search", app.Role.Search, role, ActionRead, POST, GET)
+	HandleWithSecurity(sec, roles, "/{roleId}", app.Role.Load, role, ActionRead, GET)
+	HandleWithSecurity(sec, roles, "", app.Role.Create, role, ActionWrite, POST)
+	HandleWithSecurity(sec, roles, "/{roleId}", app.Role.Update, role, ActionWrite, PUT)
+	HandleWithSecurity(sec, roles, "/{userId}", app.Role.Patch, user, ActionWrite, PATCH)
+	HandleWithSecurity(sec, roles, "/{roleId}", app.Role.Delete, role, ActionWrite, DELETE)
 
-	HandleWithSecurity(sec, r, "/roles", app.RolesHandler.Load, user, ActionRead, GET)
-	userHandler := app.UserHandler
+	HandleWithSecurity(sec, r, "/roles", app.Roles.Load, user, ActionRead, GET)
 	users := r.PathPrefix("/users").Subrouter()
-	HandleWithSecurity(sec, users, "", userHandler.Search, user, ActionRead, GET)
-	HandleWithSecurity(sec, users, "/search", userHandler.Search, user, ActionRead, GET, POST)
-	HandleWithSecurity(sec, users, "/{userId}", userHandler.Load, user, ActionRead, GET)
-	HandleWithSecurity(sec, users, "", userHandler.Create, user, ActionWrite, POST)
-	HandleWithSecurity(sec, users, "/{userId}", userHandler.Update, user, ActionWrite, PUT)
-	HandleWithSecurity(sec, users, "/{userId}", userHandler.Patch, user, ActionWrite, PATCH)
-	HandleWithSecurity(sec, users, "/{userId}", userHandler.Delete, user, ActionWrite, DELETE)
+	HandleWithSecurity(sec, users, "", app.User.Search, user, ActionRead, GET)
+	HandleWithSecurity(sec, users, "/search", app.User.Search, user, ActionRead, GET, POST)
+	HandleWithSecurity(sec, users, "/{userId}", app.User.Load, user, ActionRead, GET)
+	HandleWithSecurity(sec, users, "", app.User.Create, user, ActionWrite, POST)
+	HandleWithSecurity(sec, users, "/{userId}", app.User.Update, user, ActionWrite, PUT)
+	HandleWithSecurity(sec, users, "/{userId}", app.User.Patch, user, ActionWrite, PATCH)
+	HandleWithSecurity(sec, users, "/{userId}", app.User.Delete, user, ActionWrite, DELETE)
 
-	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLogHandler.Search, audit_log, ActionRead, GET, POST)
-	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLogHandler.Search, audit_log, ActionRead, GET, POST)
+	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, ActionRead, GET, POST)
+	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, ActionRead, GET, POST)
 	return nil
 }
 

@@ -19,7 +19,7 @@ import (
 	"github.com/core-go/service/shortid"
 	"github.com/core-go/service/unique"
 	v10 "github.com/core-go/service/v10"
-	s "github.com/core-go/sql"
+	q "github.com/core-go/sql"
 	"github.com/core-go/sql/template"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -30,26 +30,26 @@ import (
 )
 
 type ApplicationContext struct {
-	SkipSecurity          bool
-	HealthHandler         *Handler
-	AuthorizationHandler  *authorization.Handler
-	AuthorizationChecker  *AuthorizationChecker
-	Authorizer            *Authorizer
-	AuthenticationHandler *auth.AuthenticationHandler
-	PrivilegesHandler     *auth.PrivilegesHandler
-	CodeHandler           *code.Handler
-	RolesHandler          *code.Handler
-	RoleHandler           r.RoleHandler
-	UserHandler           u.UserHandler
-	AuditLogHandler       *audit.AuditLogHandler
+	SkipSecurity         bool
+	Health               *Handler
+	Authorization        *authorization.Handler
+	AuthorizationChecker *AuthorizationChecker
+	Authorizer           *Authorizer
+	Authentication       *auth.AuthenticationHandler
+	Privileges           *auth.PrivilegesHandler
+	Code                 *code.Handler
+	Roles                *code.Handler
+	Role                 r.RoleHandler
+	User                 u.UserHandler
+	AuditLog             *audit.AuditLogHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
-	db, er0 := s.Open(conf.DB)
+	db, er0 := q.Open(conf.DB)
 	if er0 != nil {
 		return nil, er0
 	}
-	sqlHealthChecker := s.NewHealthChecker(db)
+	sqlHealthChecker := q.NewHealthChecker(db)
 	var healthHandler *Handler
 
 	logError := log.ErrorMsg
@@ -57,18 +57,18 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
 
 	if conf.AuditLog.Log {
-		auditLogDB, er1 := s.Open(conf.AuditLog.DB)
+		auditLogDB, er1 := q.Open(conf.AuditLog.DB)
 		if er1 != nil {
 			return nil, er1
 		}
-		logWriter := s.NewActionLogWriter(auditLogDB, "auditLog", conf.AuditLog.Config, conf.AuditLog.Schema, generateId)
+		logWriter := q.NewActionLogWriter(auditLogDB, "auditLog", conf.AuditLog.Config, conf.AuditLog.Schema, generateId)
 		writeLog = logWriter.Write
-		auditLogHealthChecker := s.NewSqlHealthChecker(auditLogDB, "audit_log")
+		auditLogHealthChecker := q.NewSqlHealthChecker(auditLogDB, "audit_log")
 		healthHandler = NewHandler(sqlHealthChecker, auditLogHealthChecker)
 	} else {
 		healthHandler = NewHandler(sqlHealthChecker)
 	}
-	buildParam := s.GetBuild(db)
+	buildParam := q.GetBuild(db)
 	validator := v10.NewValidator()
 	sqlPrivilegeLoader := NewPrivilegeLoader(db, conf.Sql.PermissionsByUser)
 
@@ -114,7 +114,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	roleType := reflect.TypeOf(r.Role{})
 	roleBuilder := query.NewBuilder(db, "roles", roleType, buildParam)
-	roleSearchBuilder, err := s.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
+	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	roleService, er6 := r.NewRoleService(db, conf.Sql.Role.Check)
@@ -129,7 +129,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	userSearchBuilder, err := s.NewSearchBuilder(db, userType, queryUser)
+	userSearchBuilder, err := q.NewSearchBuilder(db, userType, queryUser)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
-	reportDB, er8 := s.Open(conf.AuditLog.DB)
+	reportDB, er8 := q.Open(conf.AuditLog.DB)
 	if er8 != nil {
 		return nil, er8
 	}
@@ -153,18 +153,18 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
 
 	app := &ApplicationContext{
-		HealthHandler:         healthHandler,
-		SkipSecurity:          conf.SecuritySkip,
-		AuthorizationHandler:  authorizationHandler,
-		AuthorizationChecker:  authorizationChecker,
-		Authorizer:            authorizer,
-		AuthenticationHandler: authenticationHandler,
-		PrivilegesHandler:     privilegeHandler,
-		CodeHandler:           codeHandler,
-		RolesHandler:          rolesHandler,
-		RoleHandler:           roleHandler,
-		UserHandler:           userHandler,
-		AuditLogHandler:       auditLogHandler,
+		Health:               healthHandler,
+		SkipSecurity:         conf.SecuritySkip,
+		Authorization:        authorizationHandler,
+		AuthorizationChecker: authorizationChecker,
+		Authorizer:           authorizer,
+		Authentication:       authenticationHandler,
+		Privileges:           privilegeHandler,
+		Code:                 codeHandler,
+		Roles:                rolesHandler,
+		Role:                 roleHandler,
+		User:                 userHandler,
+		AuditLog:             auditLogHandler,
 	}
 	return app, nil
 }
