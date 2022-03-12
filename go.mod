@@ -8,7 +8,7 @@ require (
 	github.com/core-go/config v0.1.0
 	github.com/core-go/health v0.4.7
 	github.com/core-go/log v0.0.8
-	github.com/core-go/search v0.2.4
+	github.com/core-go/search v0.2.5
 	github.com/core-go/security v0.1.1
 	github.com/core-go/service v0.1.9
 	github.com/core-go/sql v0.2.35
@@ -19,6 +19,6 @@ require (
 	github.com/lib/pq v1.10.3
 	github.com/rs/cors v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125 // indirect
-	go.uber.org/zap v1.17.0 // indirect
+	go.uber.org/zap v1.21.0 // indirect
 	gopkg.in/ldap.v3 v3.1.0 // indirect
 )

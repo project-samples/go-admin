@@ -12,6 +12,7 @@ import (
 	"github.com/core-go/log/zap"
 	"github.com/core-go/search/convert"
 	"github.com/core-go/search/query"
+	"github.com/core-go/search/template"
 	. "github.com/core-go/security"
 	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
@@ -20,7 +21,6 @@ import (
 	"github.com/core-go/service/unique"
 	v10 "github.com/core-go/service/v10"
 	q "github.com/core-go/sql"
-	"github.com/core-go/sql/template"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 
@@ -113,8 +113,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
 	roleType := reflect.TypeOf(r.Role{})
-	roleBuilder := query.NewBuilder(db, "roles", roleType, buildParam)
-	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, roleBuilder.BuildQuery)
+	queryRole, err := template.UseQuery(conf.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam)
+	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, queryRole)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	roleService, er6 := r.NewRoleService(db, conf.Sql.Role.Check)
