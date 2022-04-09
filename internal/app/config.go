@@ -10,11 +10,13 @@ import (
 	sv "github.com/core-go/service"
 	"github.com/core-go/service/audit"
 	. "github.com/core-go/service/builder"
+	"github.com/core-go/service/cors"
 	"github.com/core-go/sql"
 )
 
 type Config struct {
 	Server       sv.ServerConf        `mapstructure:"server"`
+	Allow        cors.AllowConfig     `mapstructure:"allow"`
 	SecuritySkip bool                 `mapstructure:"security_skip"`
 	Template     bool                 `mapstructure:"template"`
 	Ldap         LDAPConfig           `mapstructure:"ldap"`

@@ -8,8 +8,8 @@ import (
 	"github.com/core-go/log/strings"
 	"github.com/core-go/log/zap"
 	sv "github.com/core-go/service"
+	"github.com/core-go/service/cors"
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"net/http"
 
 	"go-service/internal/app"
@@ -21,7 +21,6 @@ func main() {
 	if er1 != nil {
 		panic(er1)
 	}
-
 	r := mux.NewRouter()
 
 	log.Initialize(conf.Log)
@@ -38,17 +37,10 @@ func main() {
 	if er2 != nil {
 		panic(er2)
 	}
-	/*
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-	*/
-	handler := cors.AllowAll().Handler(r)
+	c := cors.New(conf.Allow)
+	handler := c.Handler(r)
 	fmt.Println(sv.ServerInfo(conf.Server))
-	server := sv.CreateServer(conf.Server, handler)
-	if er3 := server.ListenAndServe(); er3 != nil {
-		fmt.Println(er3.Error())
-	}
+	sv.StartServer(conf.Server, handler)
 }
 
 func MaskLog(name, s string) string {
