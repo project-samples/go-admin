@@ -17,9 +17,9 @@ import (
 
 func main() {
 	conf := app.Config{}
-	er1 := config.Load(&conf, "configs/sql", "configs/config")
-	if er1 != nil {
-		panic(er1)
+	err := config.Load(&conf, "configs/sql", "configs/config")
+	if err != nil {
+		panic(err)
 	}
 	r := mux.NewRouter()
 
@@ -33,9 +33,9 @@ func main() {
 	}
 	r.Use(mid.Recover(log.ErrorMsg))
 
-	er2 := app.Route(r, context.Background(), conf)
-	if er2 != nil {
-		panic(er2)
+	err = app.Route(r, context.Background(), conf)
+	if err != nil {
+		panic(err)
 	}
 	c := cors.New(conf.Allow)
 	handler := c.Handler(r)
