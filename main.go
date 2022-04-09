@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	conf := app.Config{}
+	var conf app.Config
 	err := config.Load(&conf, "configs/sql", "configs/config")
 	if err != nil {
 		panic(err)
