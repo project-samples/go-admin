@@ -8,6 +8,10 @@ import (
 	. "github.com/core-go/auth/mock"
 	as "github.com/core-go/auth/sql"
 	"github.com/core-go/code"
+	"github.com/core-go/core/authorization"
+	"github.com/core-go/core/shortid"
+	"github.com/core-go/core/unique"
+	v10 "github.com/core-go/core/v10"
 	. "github.com/core-go/health"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/search/convert"
@@ -16,13 +20,8 @@ import (
 	. "github.com/core-go/security"
 	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
-	"github.com/core-go/service/authorization"
-	"github.com/core-go/service/shortid"
-	"github.com/core-go/service/unique"
-	v10 "github.com/core-go/service/v10"
 	q "github.com/core-go/sql"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
 
 	"go-service/internal/usecase/audit-log"
 	r "go-service/internal/usecase/role"
@@ -52,7 +51,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	sqlHealthChecker := q.NewHealthChecker(db)
 	var healthHandler *Handler
 
-	logError := log.ErrorMsg
+	logError := log.LogError
 	generateId := shortid.Generate
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
 
@@ -92,7 +91,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, er4
 	}
 	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, conf.Token, conf.Payload, privilegeLoader.Load)
-	authenticationHandler := auth.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
+	authenticationHandler := auth.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, log.ErrorMsg, writeLog)
 
 	privilegeReader, er5 := as.NewPrivilegesReader(db, conf.Sql.Privileges)
 	if er5 != nil {
@@ -102,7 +101,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
 	codeLoader := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
-	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
+	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, log.ErrorMsg)
 
 	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
 	if err != nil {
@@ -110,7 +109,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
-	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
+	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, log.ErrorMsg)
 
 	roleType := reflect.TypeOf(r.Role{})
 	queryRole, err := template.UseQuery(conf.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam)

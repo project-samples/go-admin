@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
-	"github.com/core-go/search"
-	"github.com/core-go/service/builder"
 	"net/http"
 	"reflect"
 
-	sv "github.com/core-go/service"
+	sv "github.com/core-go/core"
+	"github.com/core-go/core/builder"
+	"github.com/core-go/search"
 )
 
 type UserHandler interface {
@@ -23,7 +23,7 @@ func NewUserHandler(
 	find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error),
 	userService UserService,
 	conf sv.WriterConfig,
-	logError func(context.Context, string),
+	logError func(context.Context, string, ...map[string]interface{}),
 	generateId func(context.Context) (string, error),
 	validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
 	tracking builder.TrackingConfig,

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	sv "github.com/core-go/service"
+	sv "github.com/core-go/core"
 	q "github.com/core-go/sql"
 )
 

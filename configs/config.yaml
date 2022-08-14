@@ -1,6 +1,6 @@
 server:
   name: go-admin
-  port: 8080
+  port: 8083
   secure: false
   key: 'configs/key.pem'
   cert: 'configs/cert.pem'

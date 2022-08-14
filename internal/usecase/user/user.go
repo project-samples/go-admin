@@ -1,12 +1,17 @@
 package user
 
-import "time"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"math/big"
+	"time"
+)
 
 type User struct {
 	UserId      string     `json:"userId,omitempty" gorm:"column:userId;primary_key" bson:"_id,omitempty" validate:"required,max=20,code"`
 	Username    string     `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,max=80"`
 	Email       string     `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100"`
-	DisplayName string     `json:"displayName,omitempty" gorm:"column:displayname" bson:"displayName,omitempty" dynamodbav:"displayName,omitempty" firestore:"displayName,omitempty" validate:"max=100"`
+	DisplayName *string    `json:"displayName,omitempty" gorm:"column:displayname" bson:"displayName,omitempty" dynamodbav:"displayName,omitempty" firestore:"displayName,omitempty" validate:"max=100"`
 	ImageURL    string     `json:"imageURL,omitempty" gorm:"column:imageurl" bson:"imageURL,omitempty" dynamodbav:"imageURL,omitempty" firestore:"imageURL,omitempty" match:"equal"`
 	Status      string     `json:"status,omitempty" gorm:"column:status" bson:"status,omitempty" dynamodbav:"status,omitempty" firestore:"status,omitempty" match:"equal" validate:"required,max=1,code"`
 	Gender      string     `json:"gender,omitempty" gorm:"column:gender" bson:"gender,omitempty" dynamodbav:"gender,omitempty" firestore:"gender,omitempty" match:"equal" validate:"required,oneof=M F"`
@@ -19,4 +24,40 @@ type User struct {
 	UpdatedAt   *time.Time `json:"updatedAt,omitempty" gorm:"column:updatedAt" bson:"updatedAt,omitempty" dynamodbav:"updatedAt,omitempty" firestore:"updatedAt,omitempty"`
 	LastLogin   *time.Time `json:"lastLogin,omitempty" gorm:"lastLogin" bson:"lastLogin,omitempty" dynamodbav:"lastLogin,omitempty" firestore:"lastLogin,omitempty"`
 	Roles       []string   `json:"roles,omitempty" bson:"roles,omitempty" dynamodbav:"roles,omitempty" firestore:"roles,omitempty"`
+	Age         Currency        `json:"age,omitempty"`
+	Age2        big.Int        `json:"age2,omitempty"`
+}
+type Currency struct {
+	big.Float
+}
+func (c Currency) MarshalJSON() (text []byte, err error)  {
+	buff := []byte(c.String())
+	return buff, nil
+}
+
+func (c *Currency) UnmarshalJSON(data []byte) error {
+	err := c.UnmarshalText(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Currency) Value() (driver.Value, error) {
+	return c.String(), nil
+}
+
+func (c *Currency) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if ok {
+		return json.Unmarshal(b, &c)
+	}
+	b2, ok2 := value.(string)
+	if ok2 {
+		if b2 == "" {
+			return nil
+		}
+		return json.Unmarshal([]byte(b2), &c)
+	}
+	return nil
 }
