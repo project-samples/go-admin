@@ -23,9 +23,9 @@ import (
 	q "github.com/core-go/sql"
 	_ "github.com/go-sql-driver/mysql"
 
-	"go-service/internal/usecase/audit-log"
-	r "go-service/internal/usecase/role"
-	u "go-service/internal/usecase/user"
+	"go-service/internal/audit-log"
+	r "go-service/internal/role"
+	u "go-service/internal/user"
 )
 
 type ApplicationContext struct {
