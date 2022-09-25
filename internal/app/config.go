@@ -10,7 +10,7 @@ import (
 	. "github.com/core-go/core/builder"
 	"github.com/core-go/core/cors"
 	mid "github.com/core-go/log/middleware"
-	"github.com/core-go/log/zap"
+	log "github.com/core-go/log/zap"
 	"github.com/core-go/sql"
 )
 
@@ -36,6 +36,8 @@ type Config struct {
 	Writer       sv.WriterConfig      `mapstructure:"writer"`
 	Tracking     TrackingConfig       `mapstructure:"tracking"`
 	Sql          SqlStatement         `mapstructure:"sql"`
+	ModelStatus  *sv.StatusConfig     `mapstructure:"model_status"`
+	Action       *sv.ActionConfig     `mapstructure:"action"`
 }
 type SqlStatement struct {
 	Privileges        string        `mapstructure:"privileges"`

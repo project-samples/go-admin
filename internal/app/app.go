@@ -4,16 +4,22 @@ import (
 	"context"
 	"reflect"
 
+	"go-service/internal/audit-log"
+	"go-service/internal/fund"
+	r "go-service/internal/role"
+	u "go-service/internal/user"
+
 	"github.com/core-go/auth"
 	. "github.com/core-go/auth/mock"
 	as "github.com/core-go/auth/sql"
 	"github.com/core-go/code"
+	sv "github.com/core-go/core"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/shortid"
 	"github.com/core-go/core/unique"
 	v10 "github.com/core-go/core/v10"
 	. "github.com/core-go/health"
-	"github.com/core-go/log/zap"
+	log "github.com/core-go/log/zap"
 	"github.com/core-go/search/convert"
 	"github.com/core-go/search/query"
 	"github.com/core-go/search/template"
@@ -22,10 +28,6 @@ import (
 	. "github.com/core-go/security/sql"
 	q "github.com/core-go/sql"
 	_ "github.com/go-sql-driver/mysql"
-
-	"go-service/internal/audit-log"
-	r "go-service/internal/role"
-	u "go-service/internal/user"
 )
 
 type ApplicationContext struct {
@@ -41,6 +43,7 @@ type ApplicationContext struct {
 	Role                 r.RoleHandler
 	User                 u.UserHandler
 	AuditLog             *audit.AuditLogHandler
+	Fund                 fund.FundHandler
 }
 
 func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
@@ -54,7 +57,8 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	logError := log.LogError
 	generateId := shortid.Generate
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
-
+	action := sv.InitializeAction(conf.Action)
+	fundType := reflect.TypeOf(fund.Fund{})
 	if conf.AuditLog.Log {
 		auditLogDB, er1 := q.Open(conf.AuditLog.DB)
 		if er1 != nil {
@@ -150,6 +154,18 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		return nil, er9
 	}
 	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
+	modelStatus := sv.InitializeStatus(conf.ModelStatus)
+
+	queryFund, err := template.UseQuery(conf.Template, query.UseQuery(db, "FUNDDEMOGRAPHICSTBL", userType, buildParam), "FUNDID", templates, &userType, convert.ToMap, buildParam)
+	fundSearchBuilder, err := q.NewSearchBuilder(db, fundType, queryFund)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	fundRepository, err := q.NewRepository(db, "FUNDDEMOGRAPHICSTBL", fundType)
+	// if err != nil {
+	// 	return nil, err
+	FundService := fund.NewFundService(fundRepository)
+	FundHandler := fund.NewFundHandler(fundSearchBuilder.Search, nil, FundService, log.LogError, validator.Validate, modelStatus, action)
 
 	app := &ApplicationContext{
 		Health:               healthHandler,
@@ -164,6 +180,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		Role:                 roleHandler,
 		User:                 userHandler,
 		AuditLog:             auditLogHandler,
+		Fund:                 FundHandler,
 	}
 	return app, nil
 }

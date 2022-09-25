@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	role = "role"
-	user = "user"
-	audit_log   = "audit-log"
+	role      = "role"
+	user      = "user"
+	audit_log = "audit-log"
 )
 
 func Route(r *mux.Router, ctx context.Context, conf Config) error {
@@ -48,6 +48,15 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 
 	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, ActionRead, GET, POST)
 	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, ActionRead, GET, POST)
+
+	fund := "/fund"
+	r.HandleFunc(fund, app.Fund.Create).Methods(POST)
+	r.HandleFunc(fund+"/search", app.Fund.Search).Methods(GET, POST)
+	r.HandleFunc(fund, app.Fund.Create).Methods(POST)
+	r.HandleFunc(fund+"/{id}", app.Fund.Load).Methods(GET)
+	r.HandleFunc(fund+"/{id}", app.Fund.Update).Methods(PUT)
+	r.HandleFunc(fund+"/{id}", app.Fund.Patch).Methods(PATCH)
+	r.HandleFunc(fund+"/{id}", app.Fund.Delete).Methods(DELETE)
 	return nil
 }
 
