@@ -12,7 +12,7 @@ require (
 	github.com/core-go/search v0.2.8
 	github.com/core-go/security v0.1.1
 	github.com/core-go/sql v0.3.5
-	github.com/go-playground/validator/v10 v10.11.0 // indirect
+	github.com/go-playground/validator/v10 v10.11.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/gorilla/mux v1.8.0
