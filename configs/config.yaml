@@ -15,7 +15,7 @@ template: true
 ldap:
   tls: true
   insecure_skip_verify: true
-  server: ldap.forumsys.com:389
+  server: fake-ldap-server:389
   base_dn: dc=example,dc=com
   display_name: displayName
   users: test01,test02,kaka,zinedine.zidane,gareth.bale
