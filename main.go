@@ -10,6 +10,7 @@ import (
 	"github.com/core-go/log/strings"
 	"github.com/core-go/log/zap"
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 	"net/http"
 
 	"go-service/internal/app"

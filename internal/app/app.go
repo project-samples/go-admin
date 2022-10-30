@@ -21,7 +21,6 @@ import (
 	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
 	q "github.com/core-go/sql"
-	_ "github.com/go-sql-driver/mysql"
 
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"

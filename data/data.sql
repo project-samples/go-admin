@@ -55,11 +55,11 @@ create table rolemodules (
 
 create table auditlog (
   id varchar(255) primary key,
-  resourcetype varchar(255),
+  resource varchar(255),
   userid varchar(255),
   ip varchar(255),
   action varchar(255),
-  timestamp timestamp,
+  time timestamp,
   status varchar(255),
   remark varchar(255)
 );
