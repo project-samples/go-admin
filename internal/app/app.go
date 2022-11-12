@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/auth"
+	ah "github.com/core-go/auth/handler"
 	. "github.com/core-go/auth/mock"
 	as "github.com/core-go/auth/sql"
 	"github.com/core-go/code"
@@ -33,8 +34,8 @@ type ApplicationContext struct {
 	Authorization        *authorization.Handler
 	AuthorizationChecker *AuthorizationChecker
 	Authorizer           *Authorizer
-	Authentication       *auth.AuthenticationHandler
-	Privileges           *auth.PrivilegesHandler
+	Authentication       *ah.AuthenticationHandler
+	Privileges           *ah.PrivilegesHandler
 	Code                 *code.Handler
 	Roles                *code.Handler
 	Role                 r.RoleHandler
@@ -72,16 +73,16 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 
 	userId := conf.Tracking.User
 	tokenService := NewTokenService()
-	authorizationHandler := authorization.NewHandler(tokenService.GetAndVerifyToken, conf.Token.Secret)
-	authorizationChecker := NewDefaultAuthorizationChecker(tokenService.GetAndVerifyToken, conf.Token.Secret, userId)
+	authorizationHandler := authorization.NewHandler(tokenService.GetAndVerifyToken, conf.Auth.Token.Secret)
+	authorizationChecker := NewDefaultAuthorizationChecker(tokenService.GetAndVerifyToken, conf.Auth.Token.Secret, userId)
 	authorizer := NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
-	authStatus := auth.InitStatus(conf.Status)
+	authStatus := auth.InitStatus(conf.Auth.Status)
 	ldapAuthenticator, er2 := NewDAPAuthenticatorByConfig(conf.Ldap, authStatus)
 	if er2 != nil {
 		return nil, er2
 	}
-	userInfoService, er3 := as.NewSqlUserInfoByConfig(db, conf.Auth)
+	userInfoService, er3 := as.NewUserRepository(db, conf.Auth.Query, conf.Auth.DB, conf.Auth.UserStatus)
 	if er3 != nil {
 		return nil, er3
 	}
@@ -89,18 +90,18 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if er4 != nil {
 		return nil, er4
 	}
-	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, conf.Token, conf.Payload, privilegeLoader.Load)
-	authenticationHandler := auth.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, log.ErrorMsg, writeLog)
+	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, conf.Auth.Token, conf.Auth.Payload, privilegeLoader.Load)
+	authenticationHandler := ah.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
 
 	privilegeReader, er5 := as.NewPrivilegesReader(db, conf.Sql.Privileges)
 	if er5 != nil {
 		return nil, er5
 	}
-	privilegeHandler := auth.NewPrivilegesHandler(privilegeReader.Privileges)
+	privilegeHandler := ah.NewPrivilegesHandler(privilegeReader.Privileges)
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
 	codeLoader := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
-	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, log.ErrorMsg)
+	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
 
 	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
 	if err != nil {
@@ -108,7 +109,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
 	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
-	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, log.ErrorMsg)
+	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
 	roleType := reflect.TypeOf(r.Role{})
 	queryRole, err := template.UseQuery(conf.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam)

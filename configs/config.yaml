@@ -12,34 +12,6 @@ allow:
 security_skip: true
 template: true
 
-ldap:
-  tls: true
-  insecure_skip_verify: true
-  server: fake-ldap-server:389
-  base_dn: dc=example,dc=com
-  display_name: displayName
-  users: test01,test02,kaka,zinedine.zidane,gareth.bale
-  timeout: 3000
-token:
-  secret: secretbackoffice
-  expires: 86400000
-payload:
-  ip: ip
-  user_id: userId
-  username: username
-  email: email
-  user_type: roleId
-status:
-  timeout: -1
-  not_found: 0
-  fail: 0
-  success: 1
-  disabled: 2
-  error: 4
-
-db:
-  driver: postgres
-  data_source_name: postgres://hmacybye:gejWxp96CNZ41TjMPVqqAGZsrrhu7nRp@satao.db.elephantsql.com/hmacybye
 
 log:
   level: info
@@ -59,6 +31,39 @@ middleware:
   map:
     userId: userId
     username: username
+
+ldap:
+  tls: true
+  insecure_skip_verify: true
+  server: fake-ldap-server:389
+  base_dn: dc=example,dc=com
+  display_name: displayName
+  users: test01,test02,kaka,zinedine.zidane,gareth.bale
+  timeout: 3000
+auth:
+  token:
+    secret: secretbackoffice
+    expires: 86400000
+  status:
+    timeout: -1
+    not_found: 0
+    fail: 0
+    success: 1
+    disabled: 2
+    error: 4
+  payload:
+    ip: ip
+    user_id: userId
+    username: username
+    email: email
+    user_type: roleId
+  user_status:
+    disable: I
+  query: select userId as id, username, email, displayName as displayname, status from users where username = ?
+
+db:
+  driver: postgres
+  data_source_name: postgres://hmacybye:gejWxp96CNZ41TjMPVqqAGZsrrhu7nRp@satao.db.elephantsql.com/hmacybye
 
 tracking:
   user: userId

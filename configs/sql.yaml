@@ -1,8 +1,3 @@
-auth:
-  query: select userId as id, username, email, displayName as displayname, status from users where username = ?
-  pass: update users set lastLogin = ? where userId = ?
-  disable: I
-
 sql:
   privileges: |
     select moduleId as id,

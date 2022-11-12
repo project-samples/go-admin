@@ -1,9 +1,8 @@
 package app
 
 import (
-	. "github.com/core-go/auth"
 	. "github.com/core-go/auth/ldap"
-	as "github.com/core-go/auth/sql"
+	. "github.com/core-go/auth/sql"
 	"github.com/core-go/code"
 	sv "github.com/core-go/core"
 	"github.com/core-go/core/audit"
@@ -20,10 +19,7 @@ type Config struct {
 	SecuritySkip bool                 `mapstructure:"security_skip"`
 	Template     bool                 `mapstructure:"template"`
 	Ldap         LDAPConfig           `mapstructure:"ldap"`
-	Status       *StatusConfig        `mapstructure:"status"`
-	Auth         as.SqlConfig         `mapstructure:"auth"`
-	Token        TokenConfig          `mapstructure:"token"`
-	Payload      PayloadConfig        `mapstructure:"payload"`
+	Auth         SqlAuthConfig        `mapstructure:"auth"`
 	DB           sql.Config           `mapstructure:"db"`
 	Log          log.Config           `mapstructure:"log"`
 	MiddleWare   mid.LogConfig        `mapstructure:"middleware"`
