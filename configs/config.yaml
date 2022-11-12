@@ -2,8 +2,8 @@ server:
   name: go-admin
   port: 8083
   secure: false
-  key: 'configs/key.pem'
-  cert: 'configs/cert.pem'
+  key: "configs/key.pem"
+  cert: "configs/cert.pem"
 allow:
   origins: http://localhost:3000
   credentials: true
@@ -11,7 +11,6 @@ allow:
   headers: Access-Control-Allow-Headers,Authorization,Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers
 security_skip: true
 template: true
-
 
 log:
   level: info
@@ -53,7 +52,7 @@ auth:
     error: 4
   payload:
     ip: ip
-    user_id: userId
+    id: userId
     username: username
     email: email
     user_type: roleId

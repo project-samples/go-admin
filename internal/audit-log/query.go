@@ -9,15 +9,15 @@ import (
 	s "github.com/core-go/sql"
 )
 
-type AuditLogService interface {
+type AuditLogQuery interface {
 	search.SearchService
 }
 
-type SqlAuditLogService struct {
+type SqlAuditLogQuery struct {
 	search.SearchService
 }
 
-func NewAuditLogService(db *sql.DB) (*SqlAuditLogService, error) {
+func NewAuditLogQuery(db *sql.DB) (*SqlAuditLogQuery, error) {
 	var model AuditLog
 	tableName := "auditLog"
 	modelType := reflect.TypeOf(model)
@@ -26,5 +26,5 @@ func NewAuditLogService(db *sql.DB) (*SqlAuditLogService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SqlAuditLogService{SearchService: searchService}, nil
+	return &SqlAuditLogQuery{SearchService: searchService}, nil
 }

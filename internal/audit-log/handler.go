@@ -9,10 +9,10 @@ import (
 
 type AuditLogHandler struct {
 	*search.SearchHandler
-	service AuditLogService
+	service AuditLogQuery
 }
 
-func NewAuditLogHandler(service AuditLogService, logError func(context.Context, string, ...map[string]interface{}), writeLog func(context.Context, string, string, bool, string) error) *AuditLogHandler {
+func NewAuditLogHandler(service AuditLogQuery, logError func(context.Context, string, ...map[string]interface{}), writeLog func(context.Context, string, string, bool, string) error) *AuditLogHandler {
 	searchModelType := reflect.TypeOf(AuditLogFilter{})
 	modelType := reflect.TypeOf(AuditLog{})
 	searchHandler := search.NewSearchHandler(service.Search, modelType, searchModelType, logError, writeLog)

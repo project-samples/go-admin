@@ -38,8 +38,8 @@ type ApplicationContext struct {
 	Privileges           *ah.PrivilegesHandler
 	Code                 *code.Handler
 	Roles                *code.Handler
-	Role                 r.RoleHandler
-	User                 u.UserHandler
+	Role                 r.RoleTransport
+	User                 u.UserTransport
 	AuditLog             *audit.AuditLogHandler
 }
 
@@ -116,10 +116,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, queryRole)
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
-	roleService, er6 := r.NewRoleService(db, conf.Sql.Role.Check)
+	roleRepository, er6 := r.NewRoleAdapter(db, conf.Sql.Role.Check)
 	if er6 != nil {
 		return nil, er6
 	}
+	roleService := r.NewRoleService(roleRepository)
 	generateRoleId := shortid.Func(conf.AutoRoleId)
 	roleHandler := r.NewRoleHandler(roleSearchBuilder.Search, roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
@@ -134,10 +135,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	}
 	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
-	userService, er7 := u.NewUserService(db)
+	userRepository, er7 := u.NewUserRepository(db)
 	if er7 != nil {
 		return nil, er7
 	}
+	userService := u.NewUserService(userRepository)
 	generateUserId := shortid.Func(conf.AutoUserId)
 	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, conf.Writer, logError, generateUserId, userValidator.Validate, conf.Tracking, writeLog)
 
@@ -145,7 +147,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if er8 != nil {
 		return nil, er8
 	}
-	auditLogService, er9 := audit.NewAuditLogService(reportDB)
+	auditLogService, er9 := audit.NewAuditLogQuery(reportDB)
 	if er9 != nil {
 		return nil, er9
 	}
