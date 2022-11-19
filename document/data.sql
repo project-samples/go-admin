@@ -8,9 +8,9 @@ create table modules (
   sequence int not null,
   parent varchar(40),
   createdby varchar(40),
-  createdat timestamp,
+  createdat timestamptz,
   updatedby varchar(40),
-  updatedat timestamp
+  updatedat timestamptz
 );
 
 create table users (
@@ -25,10 +25,10 @@ create table users (
   position varchar(40),
   imageurl varchar(500),
   createdby varchar(40),
-  createdat timestamp,
+  createdat timestamptz,
   updatedby varchar(40),
-  updatedat timestamp,
-  lastlogin timestamp
+  updatedat timestamptz,
+  lastlogin timestamptz
 );
 
 create table roles (
@@ -37,9 +37,9 @@ create table roles (
   status char(1) not null,
   remark varchar(255),
   createdby varchar(40),
-  createdat timestamp,
+  createdat timestamptz,
   updatedby varchar(40),
-  updatedat timestamp
+  updatedat timestamptz
 );
 create table userroles (
   userid varchar(40) not null,
@@ -59,7 +59,7 @@ create table auditlog (
   userid varchar(255),
   ip varchar(255),
   action varchar(255),
-  time timestamp,
+  time timestamptz,
   status varchar(255),
   remark varchar(255)
 );

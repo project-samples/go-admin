@@ -147,11 +147,11 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if er8 != nil {
 		return nil, er8
 	}
-	auditLogService, er9 := audit.NewAuditLogQuery(reportDB)
+	auditLogQuery, er9 := audit.NewAuditLogQuery(reportDB, templates)
 	if er9 != nil {
 		return nil, er9
 	}
-	auditLogHandler := audit.NewAuditLogHandler(auditLogService, logError, writeLog)
+	auditLogHandler := audit.NewAuditLogHandler(auditLogQuery, logError)
 
 	app := &ApplicationContext{
 		Health:               healthHandler,
