@@ -53,11 +53,20 @@
     <if test="time.max != null">
       time <= #{time.max} and
     </if>
+    <if test="users != null">
+      userId in (#{users}) and
+    </if>
     <if test="userId != null">
       userId = #{userId} and
     </if>
+    <if test="resources != null">
+      resource in (#{resources}) and
+    </if>
     <if test="resource != null">
       resource = #{resource} and
+    </if>
+    <if test="actions != null">
+      action in (#{actions}) and
     </if>
     <if test="action != null">
       action = #{action} and

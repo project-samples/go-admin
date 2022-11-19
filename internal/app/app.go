@@ -26,6 +26,7 @@ import (
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"
 	u "go-service/internal/user"
+	"go-service/pkg/text"
 )
 
 type ApplicationContext struct {
@@ -147,7 +148,12 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if er8 != nil {
 		return nil, er8
 	}
-	auditLogQuery, er9 := audit.NewAuditLogQuery(reportDB, templates)
+	userQuery, er := text.NewTextAdapter(db, "users", "userid", "email")
+	if er != nil {
+		return nil, er
+	}
+
+	auditLogQuery, er9 := audit.NewAuditLogQuery(reportDB, templates, userQuery.Query)
 	if er9 != nil {
 		return nil, er9
 	}

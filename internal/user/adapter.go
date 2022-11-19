@@ -206,13 +206,13 @@ func buildPatchUserStatements(json map[string]interface{}, buildParam func(int) 
 	columnMap := q.JSONToColumns(json, jsonColumnMap)
 	sts.Add(q.BuildToPatch("users", columnMap, primaryKeyColumns, buildParam))
 	if json["roles"] != nil {
-		deleteModules := fmt.Sprintf("delete from userRoles where userid = '%s';", buildParam(1))
+		deleteModules := fmt.Sprintf("delete from userRoles where userid = %s", buildParam(1))
 		sts.Add(deleteModules, []interface{}{json["userId"]})
 		a := json["roles"]
 		t, ok := a.([]string)
 		if ok {
 			for i := 0; i < len(t); i++ {
-				insertModules := fmt.Sprintf("insert into userroles values ('%s','%s');", buildParam(1), buildParam(2))
+				insertModules := fmt.Sprintf("insert into userroles values (%s,%s)", buildParam(1), buildParam(2))
 				sts.Add(insertModules, []interface{}{json["userId"], t[i]})
 			}
 		}

@@ -31,6 +31,7 @@ type RoleAdapter struct {
 	modelType        reflect.Type
 	Driver           string
 	Map              map[string]int
+	SubMap           map[string]int
 	roleSchema       *q.Schema
 	roleModuleSchema *q.Schema
 	userRoleSchema   *q.Schema
@@ -43,12 +44,16 @@ func NewRoleAdapter(db *sql.DB, checkDelete string) (*RoleAdapter, error) {
 	userRoleSchema := q.CreateSchema(reflect.TypeOf(u))
 	var r roleModule
 	subType := reflect.TypeOf(r)
-	m, err := q.GetColumnIndexes(subType)
+	sm, err := q.GetColumnIndexes(subType)
 	if err != nil {
 		return nil, err
 	}
 	sql := q.ReplaceQueryArgs(q.GetDriver(db), checkDelete)
 	roleSchema := q.CreateSchema(modelType)
+	m, err := q.GetColumnIndexes(modelType)
+	if err != nil {
+		return nil, err
+	}
 	roleModuleSchema := q.CreateSchema(subType)
 
 	driver := q.GetDriver(db)
@@ -58,6 +63,7 @@ func NewRoleAdapter(db *sql.DB, checkDelete string) (*RoleAdapter, error) {
 			CheckDelete:      sql,
 			modelType:        modelType,
 			Map:              m,
+			SubMap:           sm,
 			roleSchema:       roleSchema,
 			roleModuleSchema: roleModuleSchema,
 			userRoleSchema:   userRoleSchema,
@@ -76,7 +82,7 @@ func (s *RoleAdapter) Load(ctx context.Context, roleId string) (*Role, error) {
 		return nil, nil
 	}
 	role := roles[0]
-	privileges, er3 := getPrivileges(ctx, s.db, roleId, s.BuildParam, getModules, s.Map)
+	privileges, er3 := getPrivileges(ctx, s.db, roleId, s.BuildParam, getModules, s.SubMap)
 	if er3 != nil {
 		return nil, er3
 	}
@@ -250,7 +256,7 @@ func buildPatchRoleStatements(json map[string]interface{}, buildParam func(int) 
 		t, _ := a.([]string)
 		for i := 0; i < len(t); i++ {
 			splitPermission := strings.Fields(t[i])
-			insertModules := fmt.Sprintf("insert into rolemodules values ('%s','%s','%s');", buildParam(1), buildParam(2), buildParam(3))
+			insertModules := fmt.Sprintf("insert into rolemodules values (%s,%s,%s);", buildParam(1), buildParam(2), buildParam(3))
 			sts.Add(insertModules, []interface{}{json["roleId"], splitPermission[0], splitPermission[1]})
 		}
 	}

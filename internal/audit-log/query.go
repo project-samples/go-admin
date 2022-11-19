@@ -1,15 +1,16 @@
 package audit
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"reflect"
 
+	"context"
+	"fmt"
 	"github.com/core-go/search"
 	"github.com/core-go/search/convert"
 	"github.com/core-go/search/template"
 	q "github.com/core-go/sql"
+	"go-service/pkg/text"
 )
 
 type AuditLogQuery interface {
@@ -24,11 +25,13 @@ type SqlAuditLogQuery struct {
 	modelType   reflect.Type
 	fieldsIndex map[string]int
 	templates   map[string]*template.Template
+	GetUsers    func(ctx context.Context, ids []string) ([]text.Text, error)
 }
 
 func NewAuditLogQuery(
 	db *sql.DB,
 	templates map[string]*template.Template,
+	loadUserIds func(ctx context.Context, ids []string) ([]text.Text, error),
 ) (AuditLogQuery, error) {
 	modelType := reflect.TypeOf(AuditLog{})
 	driver := q.GetDriver(db)
@@ -44,6 +47,7 @@ func NewAuditLogQuery(
 		modelType:   modelType,
 		fieldsIndex: fieldsIndex,
 		templates:   templates,
+		GetUsers:    loadUserIds,
 	}, nil
 }
 
@@ -68,9 +72,6 @@ func (s SqlAuditLogQuery) Search(ctx context.Context, filter *AuditLogFilter) ([
 
 	query, params := template.Build(ftr, *s.templates["audit_log"], s.buildParam)
 	offset := search.GetOffset(filter.Limit, filter.Page)
-	if offset < 0 {
-		offset = 0
-	}
 	pagingQuery := q.BuildPagingQuery(query, filter.Limit, offset, s.driver)
 	countQuery, params := q.BuildCountQuery(query, params)
 
@@ -80,5 +81,29 @@ func (s SqlAuditLogQuery) Search(ctx context.Context, filter *AuditLogFilter) ([
 	}
 
 	err = q.Query(ctx, s.db, s.fieldsIndex, &rows, pagingQuery, params...)
+	if len(rows) == 0 {
+		return rows, total, err
+	}
+	if s.GetUsers != nil {
+		ids := text.Unique(toListIds(rows))
+		users, err := s.GetUsers(ctx, ids)
+		if err != nil {
+			return rows, total, err
+		}
+		usersMap := text.ToMap(users)
+		for i, row := range rows {
+			if u, ok := usersMap[row.UserId]; ok {
+				rows[i].Email = u.Text
+			}
+		}
+	}
 	return rows, total, err
+}
+
+func toListIds(rows []AuditLog) []string {
+	rs := make([]string, len(rows))
+	for i, row := range rows {
+		rs[i] = row.UserId
+	}
+	return rs
 }
