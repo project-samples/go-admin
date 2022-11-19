@@ -64,8 +64,6 @@ func (s SqlAuditLogQuery) Search(ctx context.Context, filter *AuditLogFilter) ([
 	if filter.Limit <= 0 {
 		return rows, 0, nil
 	}
-
-	filter.Sort = q.BuildSort(filter.Sort, s.modelType)
 	ftr := convert.ToMap(filter, &s.modelType)
 
 	query, params := template.Build(ftr, *s.templates["audit_log"], s.buildParam)
