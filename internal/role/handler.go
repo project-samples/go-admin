@@ -21,7 +21,7 @@ type RoleTransport interface {
 }
 
 func NewRoleHandler(
-	find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error),
+	find func(context.Context, interface{}, interface{}, int64, int64) (int64, error),
 	roleService RoleRepository,
 	conf sv.WriterConfig,
 	logError func(context.Context, string, ...map[string]interface{}),
@@ -32,7 +32,7 @@ func NewRoleHandler(
 	modelType := reflect.TypeOf(Role{})
 	searchModelType := reflect.TypeOf(RoleFilter{})
 	builder := builder.NewBuilderWithIdAndConfig(generateId, modelType, tracking)
-	params := sv.CreateParams(modelType, conf.Status, logError, validate, conf.Action, writeLog)
+	params := sv.CreateParams(modelType, logError, validate, conf.Action, writeLog)
 	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
 	return &RoleHandler{service: roleService, builder: builder, SearchHandler: searchHandler, Params: params}
 }
@@ -48,7 +48,7 @@ func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
 	id := sv.GetRequiredParam(w, r)
 	if len(id) > 0 {
 		result, err := h.service.Load(r.Context(), id)
-		sv.RespondModel(w, r, result, err, h.Error, nil)
+		sv.Return(w, r, result, err, h.Error, nil)
 	}
 }
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -56,9 +56,9 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	er1 := sv.Decode(w, r, &role, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Create) {
+		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
 			result, er3 := h.service.Create(r.Context(), &role)
-			sv.AfterCreated(w, r, &role, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Create)
+			sv.AfterCreated(w, r, &role, result, er3, h.Error, h.Log, h.Resource, h.Action.Create)
 		}
 	}
 }
@@ -67,9 +67,9 @@ func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	er1 := sv.DecodeAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Update)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Update) {
+		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Update) {
 			result, er3 := h.service.Update(r.Context(), &role)
-			sv.HandleResult(w, r, &role, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Update)
+			sv.HandleResult(w, r, &role, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
 		}
 	}
 }
@@ -78,9 +78,9 @@ func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	r, json, er1 := sv.BuildMapAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Patch)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Patch) {
+		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Patch) {
 			result, er3 := h.service.Patch(r.Context(), json)
-			sv.HandleResult(w, r, json, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Patch)
+			sv.HandleResult(w, r, json, result, er3, h.Error, h.Log, h.Resource, h.Action.Patch)
 		}
 	}
 }
@@ -98,6 +98,6 @@ func (h *RoleHandler) AssignRole(w http.ResponseWriter, r *http.Request) {
 	er1 := sv.Decode(w, r, &users)
 	if er1 == nil {
 		result, er3 := h.service.AssignRole(r.Context(), roleId, users)
-		sv.HandleResult(w, r, &users, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Update)
+		sv.HandleResult(w, r, &users, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
 	}
 }

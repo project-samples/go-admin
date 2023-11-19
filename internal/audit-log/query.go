@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"github.com/core-go/search"
 	"github.com/core-go/search/convert"
-	"github.com/core-go/search/template"
 	q "github.com/core-go/sql"
+	"github.com/core-go/sql/template"
 	"go-service/pkg/text"
 )
 
@@ -73,7 +73,7 @@ func (s SqlAuditLogQuery) Search(ctx context.Context, filter *AuditLogFilter) ([
 	query, params := template.Build(ftr, *s.templates["audit_log"], s.buildParam)
 	offset := search.GetOffset(filter.Limit, filter.Page)
 	pagingQuery := q.BuildPagingQuery(query, filter.Limit, offset, s.driver)
-	countQuery, params := q.BuildCountQuery(query, params)
+	countQuery := q.BuildCountQuery(query)
 
 	total, err := q.Count(ctx, s.db, countQuery, params...)
 	if total == 0 || err != nil {

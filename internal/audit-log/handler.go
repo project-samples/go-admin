@@ -16,17 +16,17 @@ func NewAuditLogHandler(
 	paramIndex, filterIndex := s.BuildParams(reflect.TypeOf(AuditLogFilter{}))
 	return &AuditLogHandler{
 		auditLogQuery: auditLogQuery,
-		logError:       logError,
-		paramIndex:     paramIndex,
-		filterIndex:    filterIndex,
+		logError:      logError,
+		paramIndex:    paramIndex,
+		filterIndex:   filterIndex,
 	}
 }
 
 type AuditLogHandler struct {
 	auditLogQuery AuditLogQuery
-	logError       func(context.Context, string, ...map[string]interface{})
-	paramIndex     map[string]int
-	filterIndex    int
+	logError      func(context.Context, string, ...map[string]interface{})
+	paramIndex    map[string]int
+	filterIndex   int
 }
 
 func (h *AuditLogHandler) Load(w http.ResponseWriter, r *http.Request) {

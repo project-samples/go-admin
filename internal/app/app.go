@@ -14,14 +14,16 @@ import (
 	"github.com/core-go/core/unique"
 	v10 "github.com/core-go/core/v10"
 	. "github.com/core-go/health"
-	"github.com/core-go/log/zap"
+	log "github.com/core-go/log/zap"
 	"github.com/core-go/search/convert"
 	"github.com/core-go/search/query"
-	"github.com/core-go/search/template"
 	. "github.com/core-go/security"
 	. "github.com/core-go/security/jwt"
 	. "github.com/core-go/security/sql"
 	q "github.com/core-go/sql"
+	sa "github.com/core-go/sql/action"
+	"github.com/core-go/sql/template"
+	"github.com/core-go/sql/template/xml"
 
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"
@@ -61,7 +63,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		if er1 != nil {
 			return nil, er1
 		}
-		logWriter := q.NewActionLogWriter(auditLogDB, "auditLog", conf.AuditLog.Config, conf.AuditLog.Schema, generateId)
+		logWriter := sa.NewActionLogWriter(auditLogDB, "auditlog", conf.AuditLog.Config, conf.AuditLog.Schema, generateId)
 		writeLog = logWriter.Write
 		auditLogHealthChecker := q.NewSqlHealthChecker(auditLogDB, "audit_log")
 		healthHandler = NewHandler(sqlHealthChecker, auditLogHealthChecker)
@@ -69,7 +71,10 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 		healthHandler = NewHandler(sqlHealthChecker)
 	}
 	buildParam := q.GetBuild(db)
-	validator := v10.NewValidator()
+	validator, err := v10.NewValidator()
+	if err != nil {
+		return nil, err
+	}
 	sqlPrivilegeLoader := NewPrivilegeLoader(db, conf.Sql.PermissionsByUser)
 
 	userId := conf.Tracking.User
@@ -101,21 +106,28 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	privilegeHandler := ah.NewPrivilegesHandler(privilegeReader.Privileges)
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
-	codeLoader := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
-	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
-
-	templates, err := template.LoadTemplates(template.Trim, "configs/query.xml")
+	codeLoader, err := code.NewSqlCodeLoader(db, "codeMaster", conf.Code.Loader)
 	if err != nil {
 		return nil, err
 	}
-	// rolesLoader := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id, status as code from roles where status = 'A'", 0)
-	rolesLoader := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
+	codeHandler := code.NewCodeHandlerByConfig(codeLoader.Load, conf.Code.Handler, logError)
+
+	templates, err := template.LoadTemplates(xml.Trim, "configs/query.xml")
+	if err != nil {
+		return nil, err
+	}
+	// rolesLoader, err := code.NewDynamicSqlCodeLoader(db, "select roleName as name, roleId as id from roles where status = 'A'", 0)
+
+	rolesLoader, err := code.NewSqlCodeLoader(db, "roles", conf.Role.Loader)
+	if err != nil {
+		return nil, err
+	}
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, conf.Role.Handler, logError)
 
 	roleType := reflect.TypeOf(r.Role{})
-	queryRole, err := template.UseQuery(conf.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam)
+	queryRole, err := template.GetQuery(conf.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam, q.GetSort)
 	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, queryRole)
-	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.Validate)
+	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.validateFileName)
 	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
 	roleRepository, er6 := r.NewRoleAdapter(db, conf.Sql.Role.Check)
 	if er6 != nil {
@@ -126,7 +138,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	roleHandler := r.NewRoleHandler(roleSearchBuilder.Search, roleService, conf.Writer, logError, generateRoleId, roleValidator.Validate, conf.Tracking, writeLog)
 
 	userType := reflect.TypeOf(u.User{})
-	queryUser, err := template.UseQuery(conf.Template, query.UseQuery(db, "users", userType, buildParam), "user", templates, &userType, convert.ToMap, buildParam)
+	queryUser, err := template.GetQuery(conf.Template, query.UseQuery(db, "users", userType, buildParam), "user", templates, &userType, convert.ToMap, buildParam, q.GetSort)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +146,7 @@ func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.Validate)
+	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.validateFileName)
 	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
 	userRepository, er7 := u.NewUserRepository(db)
 	if er7 != nil {

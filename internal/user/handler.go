@@ -21,7 +21,7 @@ type UserTransport interface {
 }
 
 func NewUserHandler(
-	find func(context.Context, interface{}, interface{}, int64, ...int64) (int64, string, error),
+	find func(context.Context, interface{}, interface{}, int64, int64) (int64, error),
 	userService UserRepository,
 	conf sv.WriterConfig,
 	logError func(context.Context, string, ...map[string]interface{}),
@@ -32,7 +32,7 @@ func NewUserHandler(
 	modelType := reflect.TypeOf(User{})
 	searchModelType := reflect.TypeOf(UserFilter{})
 	builder := builder.NewBuilderWithIdAndConfig(generateId, modelType, tracking)
-	patchHandler, params := sv.CreatePatchAndParams(modelType, conf.Status, logError, userService.Patch, validate, builder.Patch, conf.Action, writeLog)
+	patchHandler, params := sv.CreatePatchAndParams(modelType, logError, userService.Patch, validate, builder.Patch, conf.Action, writeLog)
 	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
 	return &UserHandler{service: userService, builder: builder, PatchHandler: patchHandler, SearchHandler: searchHandler, Params: params}
 }
@@ -49,7 +49,7 @@ func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
 	id := sv.GetRequiredParam(w, r)
 	if len(id) > 0 {
 		result, err := h.service.Load(r.Context(), id)
-		sv.RespondModel(w, r, result, err, h.Error, nil)
+		sv.Return(w, r, result, err, h.Error, nil)
 	}
 }
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -57,9 +57,9 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	er1 := sv.Decode(w, r, &user, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &user)
-		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Create) {
+		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
 			result, er3 := h.service.Create(r.Context(), &user)
-			sv.AfterCreated(w, r, &user, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Create)
+			sv.AfterCreated(w, r, &user, result, er3, h.Error, h.Log, h.Resource, h.Action.Create)
 		}
 	}
 }
@@ -68,9 +68,9 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	er1 := sv.DecodeAndCheckId(w, r, &user, h.Keys, h.Indexes, h.builder.Update)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &user)
-		if !sv.HasError(w, r, errors, er2, *h.Status.ValidationError, h.Error, h.Log, h.Resource, h.Action.Update) {
+		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Update) {
 			result, er3 := h.service.Update(r.Context(), &user)
-			sv.HandleResult(w, r, &user, result, er3, h.Status, h.Error, h.Log, h.Resource, h.Action.Update)
+			sv.HandleResult(w, r, &user, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
 		}
 	}
 }
@@ -85,6 +85,6 @@ func (h *UserHandler) GetUserByRole(w http.ResponseWriter, r *http.Request) {
 	roleId := r.URL.Query().Get("roleId")
 	if len(roleId) > 0 {
 		result, err := h.service.GetUserByRole(r.Context(), roleId)
-		sv.RespondModel(w, r, result, err, h.Error, nil)
+		sv.Return(w, r, result, err, h.Error, nil)
 	}
 }

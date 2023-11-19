@@ -11,6 +11,7 @@ import (
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/sql"
+	sa "github.com/core-go/sql/action"
 )
 
 type Config struct {
@@ -27,7 +28,7 @@ type Config struct {
 	AutoUserId   *bool                `mapstructure:"auto_user_id"`
 	Role         code.Config          `mapstructure:"role"`
 	Code         code.Config          `mapstructure:"code"`
-	AuditLog     sql.ActionLogConf    `mapstructure:"audit_log"`
+	AuditLog     sa.ActionLogConf    `mapstructure:"audit_log"`
 	AuditClient  audit.AuditLogClient `mapstructure:"audit_client"`
 	Writer       sv.WriterConfig      `mapstructure:"writer"`
 	Tracking     TrackingConfig       `mapstructure:"tracking"`
