@@ -3,11 +3,8 @@ module go-service
 go 1.15
 
 require (
-	github.com/core-go/auth v0.1.6
-	github.com/core-go/code v0.1.3
-	github.com/core-go/config v0.1.0
-	github.com/core-go/core v0.4.2
-	github.com/core-go/health v0.4.8
+	github.com/core-go/auth v0.2.1
+	github.com/core-go/core v0.4.5
 	github.com/core-go/log v0.1.3
 	github.com/core-go/search v1.0.2
 	github.com/core-go/security v0.1.1
@@ -20,6 +17,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
+	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125 // indirect
 	go.uber.org/zap v1.21.0 // indirect

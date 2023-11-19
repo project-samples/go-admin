@@ -17,7 +17,7 @@
   - 100 (4 in decimal) is "delete" permission
   - "read" and "write" permission will be "001 | 010 = 011" (011 is 3 in decimal)
 - Some other standard features
-  - [config](https://github.com/core-go/config): load config from yaml files
-  - [health check](https://github.com/core-go/health): to check health of SQL 
+  - [config](https://github.com/core-go/core/config): load config from yaml files
+  - [health check](https://github.com/core-go/core/health): to check health of SQL 
   - [logging](https://github.com/core-go/log): can use [logrus](https://github.com/sirupsen/logrus) or [zap](https://github.com/uber-go/zap) to log, support to switch between [logrus](https://github.com/sirupsen/logrus) or [zap](https://github.com/uber-go/zap)
   - log tracing by at the [middleware](https://github.com/core-go/log/tree/main/middleware) the http request and http response

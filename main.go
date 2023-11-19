@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/core-go/config"
+	"github.com/core-go/core/config"
 	sv "github.com/core-go/core"
 	"github.com/core-go/core/cors"
 	mid "github.com/core-go/log/middleware"
