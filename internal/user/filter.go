@@ -1,9 +1,9 @@
 package user
 
-import . "github.com/core-go/search"
+import s "github.com/core-go/search"
 
 type UserFilter struct {
-	*Filter
+	*s.Filter
 	UserId      string   `json:"userId,omitempty" gorm:"column:userid;primary_key" bson:"_id,omitempty" validate:"required,max=20,code"`
 	Username    string   `json:"username,omitempty" gorm:"column:username" bson:"username,omitempty" dynamodbav:"username,omitempty" firestore:"username,omitempty" validate:"required,max=80" q:"true"`
 	Email       string   `json:"email,omitempty" gorm:"column:email" bson:"email,omitempty" dynamodbav:"email,omitempty" firestore:"email,omitempty" validate:"email,max=100" q:"prefix"`

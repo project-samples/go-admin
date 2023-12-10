@@ -1,11 +1,11 @@
 package user
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 
-	sv "github.com/core-go/core"
+	"github.com/core-go/core"
 	"github.com/core-go/core/builder"
 	"github.com/core-go/search"
 )
@@ -21,70 +21,100 @@ type UserTransport interface {
 }
 
 func NewUserHandler(
-	find func(context.Context, interface{}, interface{}, int64, int64) (int64, error),
-	userService UserRepository,
-	conf sv.WriterConfig,
-	logError func(context.Context, string, ...map[string]interface{}),
-	generateId func(context.Context) (string, error),
-	validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
+	find core.Search,
+	userService UserService,
+	generateId core.Generate,
+	validate core.Validate,
+	logError core.Log,
+	writeLog core.WriteLog,
+	action *core.ActionConfig,
 	tracking builder.TrackingConfig,
-	writeLog func(context.Context, string, string, bool, string) error) UserTransport {
-	modelType := reflect.TypeOf(User{})
-	searchModelType := reflect.TypeOf(UserFilter{})
-	builder := builder.NewBuilderWithIdAndConfig(generateId, modelType, tracking)
-	patchHandler, params := sv.CreatePatchAndParams(modelType, logError, userService.Patch, validate, builder.Patch, conf.Action, writeLog)
-	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
+) *UserHandler {
+	userType := reflect.TypeOf(User{})
+	filterType := reflect.TypeOf(UserFilter{})
+	builder := builder.NewBuilderWithIdAndConfig(generateId, userType, tracking)
+	patchHandler, params := core.CreatePatchAndParams(userType, logError, userService.Patch, validate, builder.Patch, action, writeLog)
+	searchHandler := search.NewSearchHandler(find, userType, filterType, logError, nil)
 	return &UserHandler{service: userService, builder: builder, PatchHandler: patchHandler, SearchHandler: searchHandler, Params: params}
 }
 
 type UserHandler struct {
-	service UserRepository
-	builder sv.Builder
-	*sv.PatchHandler
+	service UserService
+	builder core.Builder
+	*core.PatchHandler
 	*search.SearchHandler
-	*sv.Params
+	*core.Params
 }
 
 func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := sv.GetRequiredParam(w, r)
+	id := core.GetRequiredParam(w, r)
 	if len(id) > 0 {
-		result, err := h.service.Load(r.Context(), id)
-		sv.Return(w, r, result, err, h.Error, nil)
+		res, err := h.service.Load(r.Context(), id)
+		if err != nil {
+			h.Error(r.Context(), err.Error())
+			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			return
+		}
+		if res == nil {
+			core.JSON(w, http.StatusNotFound, res)
+		} else {
+			core.JSON(w, http.StatusOK, res)
+		}
 	}
 }
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var user User
-	er1 := sv.Decode(w, r, &user, h.builder.Create)
+	er1 := core.Decode(w, r, &user, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &user)
-		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
-			result, er3 := h.service.Create(r.Context(), &user)
-			sv.AfterCreated(w, r, &user, result, er3, h.Error, h.Log, h.Resource, h.Action.Create)
+		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
+			res, er3 := h.service.Create(r.Context(), &user)
+			core.AfterCreated(w, r, &user, res, er3, h.Error, h.Log, h.Resource, h.Action.Create)
 		}
 	}
 }
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var user User
-	er1 := sv.DecodeAndCheckId(w, r, &user, h.Keys, h.Indexes, h.builder.Update)
-	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &user)
-		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Update) {
-			result, er3 := h.service.Update(r.Context(), &user)
-			sv.HandleResult(w, r, &user, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
+	err := core.DecodeAndCheckId(w, r, &user, h.Keys, h.Indexes, h.builder.Update)
+	if err == nil {
+		errors, err := h.Validate(r.Context(), &user)
+		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
+			res, err := h.service.Update(r.Context(), &user)
+			core.HandleResult(w, r, &user, res, err, h.Error, h.Log, h.Resource, h.Action.Update)
 		}
 	}
 }
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := sv.GetRequiredParam(w, r)
+	id := core.GetRequiredParam(w, r)
 	if len(id) > 0 {
-		result, err := h.service.Delete(r.Context(), id)
-		sv.HandleDelete(w, r, result, err, h.Error, h.Log, h.Resource, h.Action.Delete)
+		res, err := h.service.Delete(r.Context(), id)
+		if err != nil {
+			h.Error(r.Context(), err.Error())
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, err.Error())
+			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+		} else if res == 0 {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("not found '%s'", id))
+			core.JSON(w, http.StatusNotFound, res)
+		} else if res < 0 {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("conflict '%s'", id))
+			core.JSON(w, http.StatusConflict, res)
+		} else {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, true, fmt.Sprintf("delete '%s'", id))
+			core.JSON(w, http.StatusOK, res)
+		}
 	}
 }
 func (h *UserHandler) GetUserByRole(w http.ResponseWriter, r *http.Request) {
 	roleId := r.URL.Query().Get("roleId")
-	if len(roleId) > 0 {
-		result, err := h.service.GetUserByRole(r.Context(), roleId)
-		sv.Return(w, r, result, err, h.Error, nil)
+	if len(roleId) == 0 {
+		http.Error(w, "roleId cannot be empty", http.StatusBadRequest)
+		return
 	}
+	res, err := h.service.GetUserByRole(r.Context(), roleId)
+	if err != nil {
+		h.Error(r.Context(), err.Error())
+		http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	core.JSON(w, http.StatusOK, res)
 }

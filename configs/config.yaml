@@ -70,6 +70,12 @@ tracking:
   created_at: CreatedAt
   updated_by: UpdatedBy
   updated_at: UpdatedAt
+action:
+  load: load
+  create: create
+  update: update
+  patch: patch
+  delete: delete
 
 code:
   handler:
@@ -96,17 +102,6 @@ role:
 auto_role_id: false
 auto_user_id: false
 
-writer:
-  status:
-    success: 1
-    version_error: 2
-    error: 4
-  action:
-    load: load
-    create: create
-    update: update
-    patch: patch
-    delete: delete
 audit_log:
   log: true
   db:

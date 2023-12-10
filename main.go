@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/core-go/core/config"
 	sv "github.com/core-go/core"
+	"github.com/core-go/core/config"
 	"github.com/core-go/core/cors"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/strings"
@@ -17,31 +17,31 @@ import (
 )
 
 func main() {
-	var conf app.Config
-	err := config.Load(&conf, "configs/sql", "configs/config")
+	var cfg app.Config
+	err := config.Load(&cfg, "configs/sql", "configs/config")
 	if err != nil {
 		panic(err)
 	}
 	r := mux.NewRouter()
 
-	log.Initialize(conf.Log)
+	log.Initialize(cfg.Log)
 	r.Use(func(handler http.Handler) http.Handler {
 		return mid.BuildContextWithMask(handler, MaskLog)
 	})
 	logger := mid.NewLogger()
 	if log.IsInfoEnable() {
-		r.Use(mid.Logger(conf.MiddleWare, log.InfoFields, logger))
+		r.Use(mid.Logger(cfg.MiddleWare, log.InfoFields, logger))
 	}
 	r.Use(mid.Recover(log.ErrorMsg))
 
-	err = app.Route(r, context.Background(), conf)
+	err = app.Route(r, context.Background(), cfg)
 	if err != nil {
 		panic(err)
 	}
-	c := cors.New(conf.Allow)
+	c := cors.New(cfg.Allow)
 	handler := c.Handler(r)
-	fmt.Println(sv.ServerInfo(conf.Server))
-	sv.StartServer(conf.Server, handler)
+	fmt.Println(sv.ServerInfo(cfg.Server))
+	sv.StartServer(cfg.Server, handler)
 }
 
 func MaskLog(name, s string) string {

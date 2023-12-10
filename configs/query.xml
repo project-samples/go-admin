@@ -19,6 +19,9 @@
     <if test="sort != null">
       order by {sort}
     </if>
+    <if test="sort == null">
+      order by roleId
+    </if>
   </select>
 
   <select id="user">
@@ -40,6 +43,9 @@
     1 = 1
     <if test="sort != null">
       order by {sort}
+    </if>
+    <if test="sort == null">
+      order by userId
     </if>
   </select>
 

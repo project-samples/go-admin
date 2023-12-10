@@ -1,11 +1,11 @@
 package role
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 
-	sv "github.com/core-go/core"
+	"github.com/core-go/core"
 	"github.com/core-go/core/builder"
 	"github.com/core-go/search"
 )
@@ -21,83 +21,154 @@ type RoleTransport interface {
 }
 
 func NewRoleHandler(
-	find func(context.Context, interface{}, interface{}, int64, int64) (int64, error),
+	find core.Search,
 	roleService RoleRepository,
-	conf sv.WriterConfig,
-	logError func(context.Context, string, ...map[string]interface{}),
-	generateId func(context.Context) (string, error),
-	validate func(context.Context, interface{}) ([]sv.ErrorMessage, error),
+	generateId core.Generate,
+	validate core.Validate,
+	logError core.Log,
+	writeLog core.WriteLog,
+	action *core.ActionConfig,
 	tracking builder.TrackingConfig,
-	writeLog func(context.Context, string, string, bool, string) error) RoleTransport {
-	modelType := reflect.TypeOf(Role{})
+) *RoleHandler {
+	roleType := reflect.TypeOf(Role{})
 	searchModelType := reflect.TypeOf(RoleFilter{})
-	builder := builder.NewBuilderWithIdAndConfig(generateId, modelType, tracking)
-	params := sv.CreateParams(modelType, logError, validate, conf.Action, writeLog)
-	searchHandler := search.NewSearchHandler(find, modelType, searchModelType, logError, writeLog)
+	builder := builder.NewBuilderWithIdAndConfig(generateId, roleType, tracking)
+	params := core.CreateParams(roleType, logError, validate, action, writeLog)
+	searchHandler := search.NewSearchHandler(find, roleType, searchModelType, logError, nil)
 	return &RoleHandler{service: roleService, builder: builder, SearchHandler: searchHandler, Params: params}
 }
 
 type RoleHandler struct {
 	service RoleRepository
-	builder sv.Builder
+	builder core.Builder
 	*search.SearchHandler
-	*sv.Params
+	*core.Params
 }
 
 func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := sv.GetRequiredParam(w, r)
+	id := core.GetRequiredParam(w, r)
 	if len(id) > 0 {
-		result, err := h.service.Load(r.Context(), id)
-		sv.Return(w, r, result, err, h.Error, nil)
+		res, err := h.service.Load(r.Context(), id)
+		if err != nil {
+			h.Error(r.Context(), err.Error())
+			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			return
+		}
+		if res == nil {
+			core.JSON(w, http.StatusNotFound, res)
+		} else {
+			core.JSON(w, http.StatusOK, res)
+		}
 	}
 }
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var role Role
-	er1 := sv.Decode(w, r, &role, h.builder.Create)
+	er1 := core.Decode(w, r, &role, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
-			result, er3 := h.service.Create(r.Context(), &role)
-			sv.AfterCreated(w, r, &role, result, er3, h.Error, h.Log, h.Resource, h.Action.Create)
+		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
+			res, er3 := h.service.Create(r.Context(), &role)
+			if er3 != nil {
+				h.Error(r.Context(), er3.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, er3.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			} else if res <= 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("conflict '%s'", role.RoleId))
+				core.JSON(w, http.StatusConflict, res)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("delete '%s'", role.RoleId))
+				core.JSON(w, http.StatusCreated, res)
+			}
 		}
 	}
 }
 func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var role Role
-	er1 := sv.DecodeAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Update)
-	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Update) {
-			result, er3 := h.service.Update(r.Context(), &role)
-			sv.HandleResult(w, r, &role, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
+	err := core.DecodeAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Update)
+	if err == nil {
+		errors, err := h.Validate(r.Context(), &role)
+		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
+			res, err := h.service.Update(r.Context(), &role)
+			if err != nil {
+				h.Error(r.Context(), err.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, err.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			} else if res == 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("not found '%s'", role.RoleId))
+				core.JSON(w, http.StatusNotFound, res)
+			} else if res < 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("conflict '%s'", role.RoleId))
+				core.JSON(w, http.StatusConflict, res)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("%s '%s'", h.Action.Update, role.RoleId))
+				core.JSON(w, http.StatusOK, res)
+			}
 		}
 	}
 }
 func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	var role Role
-	r, json, er1 := sv.BuildMapAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Patch)
-	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &role)
-		if !sv.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Patch) {
-			result, er3 := h.service.Patch(r.Context(), json)
-			sv.HandleResult(w, r, json, result, er3, h.Error, h.Log, h.Resource, h.Action.Patch)
+	r, json, err := core.BuildMapAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Patch)
+	if err == nil {
+		errors, err := h.Validate(r.Context(), &role)
+		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Patch) {
+			res, err := h.service.Patch(r.Context(), json)
+			if err != nil {
+				h.Error(r.Context(), err.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, err.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			} else if res == 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, fmt.Sprintf("not found '%s'", role.RoleId))
+				core.JSON(w, http.StatusNotFound, res)
+			} else if res < 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, fmt.Sprintf("conflict '%s'", role.RoleId))
+				core.JSON(w, http.StatusConflict, res)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, true, fmt.Sprintf("%s '%s'", h.Action.Patch, role.RoleId))
+				core.JSON(w, http.StatusOK, res)
+			}
 		}
 	}
 }
 func (h *RoleHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := sv.GetRequiredParam(w, r)
+	id := core.GetRequiredParam(w, r)
 	if len(id) > 0 {
-		result, err := h.service.Delete(r.Context(), id)
-		sv.HandleDelete(w, r, result, err, h.Error, h.Log, h.Resource, h.Action.Delete)
+		res, err := h.service.Delete(r.Context(), id)
+		if err != nil {
+			h.Error(r.Context(), err.Error())
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, err.Error())
+			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+		} else if res == 0 {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("not found '%s'", id))
+			core.JSON(w, http.StatusNotFound, res)
+		} else if res < 0 {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("conflict '%s'", id))
+			core.JSON(w, http.StatusConflict, res)
+		} else {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, true, fmt.Sprintf("%s '%s'", h.Action.Delete, id))
+			core.JSON(w, http.StatusOK, res)
+		}
 	}
 }
 
 func (h *RoleHandler) AssignRole(w http.ResponseWriter, r *http.Request) {
-	users := []string{}
-	roleId := sv.GetParam(r, 1)
-	er1 := sv.Decode(w, r, &users)
-	if er1 == nil {
-		result, er3 := h.service.AssignRole(r.Context(), roleId, users)
-		sv.HandleResult(w, r, &users, result, er3, h.Error, h.Log, h.Resource, h.Action.Update)
+	var users []string
+	id := core.GetRequiredParam(w, r, 1)
+	if len(id) > 0 {
+		err := core.Decode(w, r, &users)
+		if err == nil {
+			res, err := h.service.AssignRole(r.Context(), id, users)
+			if err != nil {
+				h.Error(r.Context(), err.Error())
+				h.Log(r.Context(), h.Resource, "assign", false, err.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			} else if res == 0 {
+				h.Log(r.Context(), h.Resource, "assign", false, fmt.Sprintf("not found '%s'", id))
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			} else {
+				h.Log(r.Context(), h.Resource, "assign", true, fmt.Sprintf("assign '%s'", id))
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			}
+		}
 	}
 }
