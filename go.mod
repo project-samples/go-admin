@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/core-go/auth v0.2.6
-	github.com/core-go/core v0.5.0
+	github.com/core-go/core v0.5.2
 	github.com/core-go/log v1.0.0
 	github.com/core-go/search v1.0.2
 	github.com/core-go/sql v0.5.5

@@ -111,9 +111,9 @@ audit_log:
     id: id
     user: userid
     ip: ip
-    resource: resourcetype
+    resource: resource
     action: action
-    timestamp: timestamp
+    timestamp: time
     status: status
     desc: remark
   config:

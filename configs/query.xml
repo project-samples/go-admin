@@ -50,7 +50,7 @@
   </select>
 
   <select id="audit_log">
-    select *
+    select ${fields}
     from auditlog
     where
     <if test="time.min != null">
@@ -86,6 +86,9 @@
     1 = 1
     <if test="sort != null">
       order by {sort}
+    </if>
+    <if test="sort == null">
+      order by time desc
     </if>
   </select>
 </mapper>
