@@ -28,6 +28,7 @@ import (
 
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"
+	se "go-service/internal/settings"
 	u "go-service/internal/user"
 )
 
@@ -44,6 +45,7 @@ type ApplicationContext struct {
 	Role                 r.RoleTransport
 	User                 u.UserTransport
 	AuditLog             *audit.AuditLogHandler
+	Settings             *se.Handler
 }
 
 func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
@@ -98,6 +100,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegeLoader.Load)
 	authenticationHandler := ah.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
+	authenticationHandler.Cookie = false
 
 	privilegeReader, er5 := as.NewPrivilegesReader(db, cfg.Sql.Privileges)
 	if er5 != nil {
@@ -174,6 +177,8 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	auditLogHandler := audit.NewAuditLogHandler(auditLogQuery, logError)
 
+	settingsHandler := se.NewSettingsHandler(logError, writeLog, db, "users", buildParam, "userId", "userid", "dateformat", "language")
+
 	app := &ApplicationContext{
 		Health:               healthHandler,
 		SkipSecurity:         cfg.SecuritySkip,
@@ -187,6 +192,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		Role:                 roleHandler,
 		User:                 userHandler,
 		AuditLog:             auditLogHandler,
+		Settings:             settingsHandler,
 	}
 	return app, nil
 }

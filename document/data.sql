@@ -6,6 +6,7 @@ create table modules (
   resourcekey varchar(255),
   icon varchar(255),
   sequence int not null,
+  actions int4 null,
   parent varchar(40),
   createdby varchar(40),
   createdat timestamptz,
@@ -24,6 +25,8 @@ create table users (
   title varchar(10),
   position varchar(40),
   imageurl varchar(500),
+  language varchar(5),
+  dateformat varchar(12),
   createdby varchar(40),
   createdat timestamptz,
   updatedby varchar(40),
@@ -63,14 +66,14 @@ create table auditlog (
   status varchar(255),
   remark varchar(255)
 );
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('dashboard','Dashboard','A','/dashboard','dashboard','assignments',1,'');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('admin','Admin','A','/admin','admin','contacts',2,'');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('setup','Setup','A','/setup','setup','settings',3,'');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('report','Report','A','/report','report','pie_chart',4,'');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('dashboard','Dashboard','A','/dashboard','dashboard','assignments',1,7,'');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('admin','Admin','A','/admin','admin','contacts',2,7,'');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('setup','Setup','A','/setup','setup','settings',3,7,'');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('report','Report','A','/report','report','pie_chart',4,7,'');
 
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('user','User Management','A','/admin/users','user','person',1,'admin');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('role','Role Management','A','/admin/roles','role','credit_card',2,'admin');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,parent) values ('audit_log','Audit Log','A','/admin/audit-logs','audit_log','zoom_in',4,'admin');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('user','User Management','A','/users','user','person',1,7,'admin');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('role','Role Management','A','/roles','role','credit_card',2,7,'admin');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('audit_log','Audit Log','A','/audit-logs','audit_log','zoom_in',4,1,'admin');
 
 insert into roles (roleid, rolename, status, remark) values ('admin','Admin','A','Admin');
 insert into roles (roleid, rolename, status, remark) values ('call_center','Call Center','A','Call Center');
@@ -111,12 +114,14 @@ insert into users (userid,username,email,displayname,imageurl,status,gender,phon
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00032','mason.greenwood','mason.greenwood@gmail.com@gmail.com','Mason Greenwood','https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Mason_Greenwood.jpeg/440px-Mason_Greenwood.jpeg','A','M','0987654321','Ms','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00033','lee.grant','lee.grant@gmail.com@gmail.com','Lee Grant','https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/LeeGrant09.jpg/400px-LeeGrant09.jpg','A','M','0987654321','Ms','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00034','jesse.lingard','jesse.lingard@gmail.com@gmail.com','Jesse Lingard','https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Jesse_Lingard_2018-06-13_1.jpg/440px-Jesse_Lingard_2018-06-13_1.jpg','A','M','0987654321','Mr','E');
-insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00035','keylor.navas','keylor.navas@gmail.com@gmail.com','Keylor Navas','https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Liver-RM_%288%29_%28cropped%29.jpg/440px-Liver-RM_%288%29_%28cropped%29.jpg','A','M','0987654321','Mr','E');
+insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00035','keylor.navas','keylor.navas@gmail.com@gmail.com','Keylor Navas','https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Keylor_Navas_2018_%28cropped%29.jpg/220px-Keylor_Navas_2018_%28cropped%29.jpg','A','M','0987654321','Mr','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00036','achraf.hakimi','achraf.hakimi@gmail.com@gmail.com','Achraf Hakimi','https://upload.wikimedia.org/wikipedia/commons/9/91/Iran-Morocco_by_soccer.ru_14_%28Achraf_Hakimi%29.jpg','A','M','0987654321','Mr','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00037','presnel.kimpembe','presnel.kimpembe@gmail.com@gmail.com','Presnel Kimpembe','https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Presnel_Kimpembe.jpg/400px-Presnel_Kimpembe.jpg','A','M','0987654321','Mr','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00038','sergio.ramos','sergio.ramos@gmail.com@gmail.com','Sergio Ramos','https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/FC_RB_Salzburg_versus_Real_Madrid_%28Testspiel%2C_7._August_2019%29_09.jpg/440px-FC_RB_Salzburg_versus_Real_Madrid_%28Testspiel%2C_7._August_2019%29_09.jpg','A','M','0987654321','Mr','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00039','marquinhos','marquinhos@gmail.com@gmail.com','Marquinhos','https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Brasil_conquista_primeiro_ouro_ol%C3%ADmpico_nos_penaltis_1039278-20082016-_mg_4916_%28cropped%29.jpg/440px-Brasil_conquista_primeiro_ouro_ol%C3%ADmpico_nos_penaltis_1039278-20082016-_mg_4916_%28cropped%29.jpg','A','M','0987654321','Mr','E');
 insert into users (userid,username,email,displayname,imageurl,status,gender,phone,title,position) values ('00040','marco.verratti','marco.verratti@gmail.com@gmail.com','Marco Verratti','https://upload.wikimedia.org/wikipedia/commons/d/d0/Kiev-PSG_%289%29.jpg','A','M','0987654321','Mr','E');
+
+update users set language = 'en', dateformat = 'd/M/yyyy';
 
 insert into userroles(userid, roleid) values ('00001','admin');
 insert into userroles(userid, roleid) values ('00003','admin');
@@ -151,4 +156,10 @@ alter table modules add foreign key (parent) references modules (moduleid);
 
 alter table rolemodules add foreign key (roleid) references roles (roleid);
 alter table rolemodules add foreign key (moduleid) references modules (moduleid);
+
+drop table modules;
+drop table users;
+drop table roles;
+drop table userroles;
+drop table rolemodules;
 */

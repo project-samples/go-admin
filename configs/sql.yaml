@@ -6,12 +6,13 @@ sql:
       path,
       icon,
       parent,
+      actions,
       sequence
     from modules
     where status = 'A'
   privileges_by_user: |
     select distinct m.moduleId as id, m.moduleName as name, m.resourceKey as resource_key,
-      m.path, m.icon, m.parent, m.sequence, rm.permissions
+      m.path, m.icon, m.parent, m.sequence, rm.permissions, m.actions
     from users u
       inner join userRoles ur on u.userId = ur.userId
       inner join roles r on ur.roleId = r.roleId
@@ -27,6 +28,5 @@ sql:
       inner join roleModules rm on r.roleId = rm.roleId
       inner join modules m on rm.moduleId = m.moduleId
     where u.userId = ? and u.status = 'A' and r.status = 'A' and rm.moduleId = ? and m.status = 'A'
-    order by sequence
   role:
     check: select userId from userRoles where roleId = ? limit 1

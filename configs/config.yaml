@@ -1,6 +1,6 @@
 server:
   name: go-admin
-  port: 8083
+  port: 8082
   secure: false
   key: "configs/key.pem"
   cert: "configs/cert.pem"
@@ -58,7 +58,7 @@ auth:
     user_type: roleId
   user_status:
     disable: I
-  query: select userId as id, username, email, displayName as displayname, status from users where username = ?
+  query: select userId as id, username, email, displayName as displayname, language, dateformat, status from users where username = ?
 
 db:
   driver: postgres

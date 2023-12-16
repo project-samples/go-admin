@@ -49,6 +49,7 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 
 	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
+	Handle(r, "/settings", app.Settings.Save, c.PATCH)
 	return nil
 }
 
