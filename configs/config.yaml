@@ -1,6 +1,6 @@
 server:
   name: go-admin
-  port: 8082
+  port: 8083
   secure: false
   key: "configs/key.pem"
   cert: "configs/cert.pem"
@@ -62,7 +62,7 @@ auth:
 
 db:
   driver: postgres
-  data_source_name: postgres://hmacybye:gejWxp96CNZ41TjMPVqqAGZsrrhu7nRp@satao.db.elephantsql.com/hmacybye
+  data_source_name: postgres://postgres:abcd1234@localhost/back-office?sslmode=disable
 
 tracking:
   user: userId
@@ -80,6 +80,8 @@ action:
 code:
   handler:
     master: true
+    id: value
+    name: text
   loader:
     master: master
     id: code
@@ -106,7 +108,7 @@ audit_log:
   log: true
   db:
     driver: postgres
-    data_source_name: postgres://hmacybye:gejWxp96CNZ41TjMPVqqAGZsrrhu7nRp@satao.db.elephantsql.com/hmacybye
+    data_source_name: postgres://postgres:abcd1234@localhost/back-office?sslmode=disable
   schema:
     id: id
     user: userid

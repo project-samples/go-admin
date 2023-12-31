@@ -109,7 +109,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	privilegeHandler := ah.NewPrivilegesHandler(privilegeReader.Privileges)
 
 	// codeLoader := code.NewDynamicSqlCodeLoader(db, "select code, name, status as text from codeMaster where master = ? and status = 'A'", 1)
-	codeLoader, err := code.NewSqlCodeLoader(db, "codeMaster", cfg.Code.Loader)
+	codeLoader, err := code.NewSqlCodeLoader(db, "code_master", cfg.Code.Loader)
 	if err != nil {
 		return nil, err
 	}

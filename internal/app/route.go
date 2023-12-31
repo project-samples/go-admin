@@ -39,7 +39,8 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 
 	HandleWithSecurity(sec, r, "/roles", app.Roles.Load, user, c.ActionRead, c.GET)
 	users := r.PathPrefix("/users").Subrouter()
-	HandleWithSecurity(sec, users, "", app.User.Search, user, c.ActionRead, c.GET)
+	HandleWithSecurity(sec, users, "", app.User.GetUserByRole, role, c.ActionRead, c.GET)
+
 	HandleWithSecurity(sec, users, "/search", app.User.Search, user, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Load, user, c.ActionRead, c.GET)
 	HandleWithSecurity(sec, users, "", app.User.Create, user, c.ActionWrite, c.POST)
