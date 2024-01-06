@@ -14,6 +14,7 @@ import (
 	"github.com/core-go/core/jwt"
 	sec "github.com/core-go/core/security"
 	ss "github.com/core-go/core/security/sql"
+	se "github.com/core-go/core/settings"
 	"github.com/core-go/core/shortid"
 	"github.com/core-go/core/unique"
 	ur "github.com/core-go/core/user"
@@ -28,7 +29,6 @@ import (
 
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"
-	se "go-service/internal/settings"
 	u "go-service/internal/user"
 )
 
