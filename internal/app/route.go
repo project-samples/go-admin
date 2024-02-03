@@ -48,6 +48,24 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Patch, user, c.ActionWrite, c.PATCH)
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Delete, user, c.ActionWrite, c.DELETE)
 
+	currency := "/currencies"
+	r.HandleFunc(currency, app.Currency.Search).Methods(c.GET)
+	r.HandleFunc(currency+"/search", app.Currency.Search).Methods(c.GET, c.POST)
+	r.HandleFunc(currency+"/{id}", app.Currency.Load).Methods(c.GET)
+	r.HandleFunc(currency, app.Currency.Create).Methods(c.POST)
+	r.HandleFunc(currency+"/{id}", app.Currency.Update).Methods(c.PUT)
+	r.HandleFunc(currency+"/{id}", app.Currency.Patch).Methods(c.PATCH)
+	r.HandleFunc(currency+"/{id}", app.Currency.Delete).Methods(c.DELETE)
+
+	locale := "/locales"
+	r.HandleFunc(locale, app.Locale.Search).Methods(c.GET)
+	r.HandleFunc(locale+"/search", app.Locale.Search).Methods(c.GET, c.POST)
+	r.HandleFunc(locale+"/{id}", app.Locale.Load).Methods(c.GET)
+	r.HandleFunc(locale, app.Locale.Create).Methods(c.POST)
+	r.HandleFunc(locale+"/{id}", app.Locale.Update).Methods(c.PUT)
+	r.HandleFunc(locale+"/{id}", app.Locale.Patch).Methods(c.PATCH)
+	r.HandleFunc(locale+"/{id}", app.Locale.Delete).Methods(c.DELETE)
+
 	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
 	Handle(r, "/settings", app.Settings.Save, c.PATCH)
