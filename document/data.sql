@@ -5,7 +5,7 @@ create table code_master (
     sequence int8,
     status char(1),
     primary key (master, code)
-)
+);
 create table modules (
   moduleid varchar(40) primary key,
   modulename varchar(255) not null,

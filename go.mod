@@ -3,16 +3,19 @@ module go-service
 go 1.17
 
 require (
-	github.com/core-go/auth v0.2.6
-	github.com/core-go/core v0.5.4
+	github.com/core-go/auth v0.2.7
+	github.com/core-go/core v0.5.8
 	github.com/core-go/log v1.0.0
 	github.com/core-go/search v1.0.2
 	github.com/core-go/sql v0.5.7
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -26,6 +29,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/spf13/afero v1.1.2 // indirect

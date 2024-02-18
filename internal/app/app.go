@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	redis "github.com/core-go/core/redis/v9"
+	"net/http"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -10,8 +12,10 @@ import (
 	as "github.com/core-go/auth/sql"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
+	cookies "github.com/core-go/core/cookies"
 	"github.com/core-go/core/health"
 	"github.com/core-go/core/jwt"
+	s "github.com/core-go/core/security"
 	sec "github.com/core-go/core/security"
 	ss "github.com/core-go/core/security/sql"
 	se "github.com/core-go/core/settings"
@@ -26,6 +30,7 @@ import (
 	sa "github.com/core-go/sql/action"
 	"github.com/core-go/sql/template"
 	"github.com/core-go/sql/template/xml"
+	"github.com/google/uuid"
 
 	"go-service/internal/audit-log"
 	r "go-service/internal/role"
@@ -39,6 +44,7 @@ type ApplicationContext struct {
 	AuthorizationChecker *sec.AuthorizationChecker
 	Authorizer           *sec.Authorizer
 	Authentication       *ah.AuthenticationHandler
+	SessionAuthorizer    *s.SessionAuthorizer
 	Privileges           *ah.PrivilegesHandler
 	Code                 *code.Handler
 	Roles                *code.Handler
@@ -53,8 +59,22 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if er0 != nil {
 		return nil, er0
 	}
+	if err := db.Ping(); err != nil {
+		return nil, er0
+	}
+
 	sqlHealthChecker := q.NewHealthChecker(db)
 	var healthHandler *health.Handler
+	cacheRedis, err := redis.NewRedisAdapterByConfig(cfg.Redis)
+	if err != nil {
+		return nil, err
+	}
+	{
+		err := cacheRedis.Client.Ping(ctx).Err()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	logError := log.LogError
 	generateId := shortid.Generate
@@ -98,10 +118,22 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if er4 != nil {
 		return nil, er4
 	}
+	generateUUID := func(ctx context.Context) (string, error) {
+		return uuid.NewString(), nil
+	}
 	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegeLoader.Load)
-	authenticationHandler := ah.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
-	authenticationHandler.Cookie = false
+	authenticationHandler := ah.NewAuthenticationHandlerWithCache(
+		authenticator.Authenticate,
+		authStatus.Error,
+		authStatus.Timeout, logError, cacheRedis, generateUUID, cfg.Session.ExpiredTime, cfg.Session.Host, http.SameSiteStrictMode, true, true, writeLog)
+	jTokenSvc := jwt.NewTokenService()
+	co := cookies.NewCookies("id", cfg.Session.Host, cfg.Session.ExpiredTime, http.SameSiteStrictMode)
 
+	mdSessionAuthorizer := s.NewSessionAuthorizer(cfg.Auth.Token.Secret, jTokenSvc.VerifyToken,
+		co.RefreshValue,
+		nil,
+		nil,
+		cacheRedis, cfg.Session.ExpiredTime, logError, true)
 	privilegeReader, er5 := as.NewPrivilegesReader(db, cfg.Sql.Privileges)
 	if er5 != nil {
 		return nil, er5
@@ -186,6 +218,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		AuthorizationChecker: authorizationChecker,
 		Authorizer:           authorizer,
 		Authentication:       authenticationHandler,
+		SessionAuthorizer:    mdSessionAuthorizer,
 		Privileges:           privilegeHandler,
 		Code:                 codeHandler,
 		Roles:                rolesHandler,

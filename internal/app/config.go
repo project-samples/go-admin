@@ -8,10 +8,12 @@ import (
 	"github.com/core-go/core/builder"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/cors"
+	redis "github.com/core-go/core/redis/v9"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/sql"
 	sa "github.com/core-go/sql/action"
+	"time"
 )
 
 type Config struct {
@@ -33,6 +35,8 @@ type Config struct {
 	Action       *core.ActionConfig     `mapstructure:"action"`
 	Tracking     builder.TrackingConfig `mapstructure:"tracking"`
 	Sql          SqlStatement           `mapstructure:"sql"`
+	Session      SessionConfig          `mapstructure:"session"`
+	Redis        redis.Config           `mapstructure:"redis"`
 }
 type SqlStatement struct {
 	Privileges        string        `mapstructure:"privileges"`
@@ -42,4 +46,10 @@ type SqlStatement struct {
 }
 type RoleStatement struct {
 	Check string `mapstructure:"check"`
+}
+
+type SessionConfig struct {
+	Secret      string        `yaml:"secret" mapstructure:"secret"`
+	ExpiredTime time.Duration `mapstructure:"expired_time"`
+	Host        string        `mapstructure:"host"`
 }
