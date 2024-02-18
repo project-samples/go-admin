@@ -12,7 +12,9 @@ import (
 const (
 	role = "role"
 	user = "user"
-	audit_log   = "audit-log"
+	currency = "currency"
+	locale = "locale"
+	audit_log   = "audit_log"
 )
 
 func Route(r *mux.Router, ctx context.Context, conf Config) error {
@@ -27,6 +29,7 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	Handle(r, "/authenticate", app.Authentication.Authenticate, c.POST)
 
 	r.Handle("/code/{code}", app.AuthorizationChecker.Check(http.HandlerFunc(app.Code.Load))).Methods(c.GET)
+	r.Handle("/settings", app.AuthorizationChecker.Check(http.HandlerFunc(app.Settings.Save))).Methods(c.PATCH)
 
 	HandleWithSecurity(sec, r, "/privileges", app.Privileges.All, role, c.ActionRead, c.GET)
 	roles := r.PathPrefix("/roles").Subrouter()
@@ -48,27 +51,24 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Patch, user, c.ActionWrite, c.PATCH)
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Delete, user, c.ActionWrite, c.DELETE)
 
-	currency := "/currencies"
-	r.HandleFunc(currency, app.Currency.Search).Methods(c.GET)
-	r.HandleFunc(currency+"/search", app.Currency.Search).Methods(c.GET, c.POST)
-	r.HandleFunc(currency+"/{id}", app.Currency.Load).Methods(c.GET)
-	r.HandleFunc(currency, app.Currency.Create).Methods(c.POST)
-	r.HandleFunc(currency+"/{id}", app.Currency.Update).Methods(c.PUT)
-	r.HandleFunc(currency+"/{id}", app.Currency.Patch).Methods(c.PATCH)
-	r.HandleFunc(currency+"/{id}", app.Currency.Delete).Methods(c.DELETE)
+	currencies := r.PathPrefix("/currencies").Subrouter()
+	HandleWithSecurity(sec, currencies, "/search", app.Currency.Search, currency, c.ActionRead, c.GET, c.POST)
+	HandleWithSecurity(sec, currencies, "/{currencyId}", app.Currency.Load, currency, c.ActionRead, c.GET)
+	HandleWithSecurity(sec, currencies, "", app.Currency.Create, currency, c.ActionWrite, c.POST)
+	HandleWithSecurity(sec, currencies, "/{currencyId}", app.Currency.Update, currency, c.ActionWrite, c.PUT)
+	HandleWithSecurity(sec, currencies, "/{currencyId}", app.Currency.Patch, currency, c.ActionWrite, c.PATCH)
+	HandleWithSecurity(sec, currencies, "/{currencyId}", app.Currency.Delete, currency, c.ActionWrite, c.DELETE)
 
-	locale := "/locales"
-	r.HandleFunc(locale, app.Locale.Search).Methods(c.GET)
-	r.HandleFunc(locale+"/search", app.Locale.Search).Methods(c.GET, c.POST)
-	r.HandleFunc(locale+"/{id}", app.Locale.Load).Methods(c.GET)
-	r.HandleFunc(locale, app.Locale.Create).Methods(c.POST)
-	r.HandleFunc(locale+"/{id}", app.Locale.Update).Methods(c.PUT)
-	r.HandleFunc(locale+"/{id}", app.Locale.Patch).Methods(c.PATCH)
-	r.HandleFunc(locale+"/{id}", app.Locale.Delete).Methods(c.DELETE)
+	locales := r.PathPrefix("/locales").Subrouter()
+	HandleWithSecurity(sec, locales, "/search", app.Locale.Search, locale, c.ActionRead, c.GET, c.POST)
+	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Load, locale, c.ActionRead, c.GET)
+	HandleWithSecurity(sec, locales, "", app.Locale.Create, locale, c.ActionWrite, c.POST)
+	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Update, locale, c.ActionWrite, c.PUT)
+	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Patch, locale, c.ActionWrite, c.PATCH)
+	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Delete, locale, c.ActionWrite, c.DELETE)
 
 	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
-	Handle(r, "/settings", app.Settings.Save, c.PATCH)
 	return nil
 }
 

@@ -83,8 +83,8 @@ insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,a
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('role','Role Management','A','/roles','role','credit_card',2,7,'admin');
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('audit_log','Audit Log','A','/audit-logs','audit_log','zoom_in',4,1,'admin');
 
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('currency','Currency Management','A','/currencies','currency','person',1,7,'setup');
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('locale','Locale Management','A','/locales','locale','person',1,7,'setup');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('currency','Currency','A','/currencies','currency','local_atm',1,7,'setup');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('locale','Locale','A','/locales','locale','public',1,7,'setup');
 
 insert into roles (roleid, rolename, status, remark) values ('admin','Admin','A','Admin');
 insert into roles (roleid, rolename, status, remark) values ('call_center','Call Center','A','Call Center');
@@ -247,7 +247,8 @@ drop table auditlog;
 CREATE TABLE currency (
     code bpchar(3) NOT NULL PRIMARY KEY,
     symbol varchar(6) NOT NULL,
-    decimal_digits int4 NULL
+    decimal_digits int4 NULL,
+    status char(1)
 );
 CREATE TABLE locale (
     code varchar(40) NOT NULL PRIMARY KEY,
@@ -307,7 +308,7 @@ insert into currency(code,decimal_digits,symbol) values ('HRK',2,'kn');
 insert into currency(code,decimal_digits,symbol) values ('HUF',2,'Ft');
 insert into currency(code,decimal_digits,symbol) values ('IDR',0,'Rp');
 insert into currency(code,decimal_digits,symbol) values ('ILS',2,'₪');
-insert into currency(code,decimal_digits,symbol) values ('INR',2,' ₹‎');
+insert into currency(code,decimal_digits,symbol) values ('INR',2,'₹');
 insert into currency(code,decimal_digits,symbol) values ('IQD',2,'د.ع.‏');
 insert into currency(code,decimal_digits,symbol) values ('IRR',2,'ريال');
 insert into currency(code,decimal_digits,symbol) values ('ISK',0,'kr.');
@@ -340,7 +341,7 @@ insert into currency(code,decimal_digits,symbol) values ('NZD',2,'$');
 insert into currency(code,decimal_digits,symbol) values ('OMR',3,'ر.ع.‏');
 insert into currency(code,decimal_digits,symbol) values ('PAB',2,'B/.');
 insert into currency(code,decimal_digits,symbol) values ('PEN',2,'S/.');
-insert into currency(code,decimal_digits,symbol) values ('PHP',2,'₱‎');
+insert into currency(code,decimal_digits,symbol) values ('PHP',2,'₱');
 insert into currency(code,decimal_digits,symbol) values ('PKR',2,'Rs');
 insert into currency(code,decimal_digits,symbol) values ('PLN',2,'zł');
 insert into currency(code,decimal_digits,symbol) values ('PYG',2,'Gs');
@@ -370,6 +371,7 @@ insert into currency(code,decimal_digits,symbol) values ('XOF',2,'XOF');
 insert into currency(code,decimal_digits,symbol) values ('YER',2,'ر.ي.‏');
 insert into currency(code,decimal_digits,symbol) values ('ZAR',2,'R');
 insert into currency(code,decimal_digits,symbol) values ('ZWL',2,'Z$');
+update curency set status = 'A';
 
 INSERT INTO locale (code,country_code,country_name,native_country_name,"name",native_name,date_format,first_day_of_week,decimal_separator,group_separator,currency_decimal_digits,currency_code,currency_pattern,currency_sample) VALUES
 ('af-ZA','ZA','South Africa','Suid Afrika','Afrikaans (South Africa)','Afrikaans (Suid Afrika)','yyyy/MM/dd',1,'.',',',2,'ZAR',2,'R 10,000.00'),

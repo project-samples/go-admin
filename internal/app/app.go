@@ -29,8 +29,8 @@ import (
 	"github.com/core-go/sql/template/xml"
 
 	"go-service/internal/audit-log"
-	"go-service/internal/currency"
-	"go-service/internal/locale"
+	c "go-service/internal/currency"
+	loc "go-service/internal/locale"
 	r "go-service/internal/role"
 	u "go-service/internal/user"
 )
@@ -47,8 +47,8 @@ type ApplicationContext struct {
 	Roles                *code.Handler
 	Role                 r.RoleTransport
 	User                 u.UserTransport
-	Currency             currency.CurrencyTransport
-	Locale               locale.LocaleTransport
+	Currency             c.CurrencyTransport
+	Locale               loc.LocaleTransport
 	AuditLog             *audit.AuditLogHandler
 	Settings             *se.Handler
 }
@@ -171,7 +171,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, generateUserId, userValidator.Validate, logError, writeLog, cfg.Action, cfg.Tracking)
 
 	action := core.InitializeAction(cfg.Action)
-	currencyType := reflect.TypeOf(currency.Currency{})
+	currencyType := reflect.TypeOf(c.Currency{})
 	currencyQueryBuilder := query.UseQuery(db, "currency", currencyType)
 	currencySearchBuilder, err := q.NewSearchBuilder(db, currencyType, currencyQueryBuilder)
 	if err != nil {
@@ -181,10 +181,10 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	currencyService := currency.NewCurrencyService(currencyRepository)
-	currencyHandler := currency.NewCurrencyHandler(currencySearchBuilder.Search, currencyService, logError, validator.Validate, &action)
+	currencyService := c.NewCurrencyService(currencyRepository)
+	currencyHandler := c.NewCurrencyHandler(currencySearchBuilder.Search, currencyService, logError, validator.Validate, &action)
 
-	localeType := reflect.TypeOf(locale.Locale{})
+	localeType := reflect.TypeOf(loc.Locale{})
 	queryLocale := query.UseQuery(db, "locale", localeType)
 	localeSearchBuilder, err := q.NewSearchBuilder(db, localeType, queryLocale)
 	if err != nil {
@@ -194,8 +194,8 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	localeService := locale.NewLocaleService(localeRepository)
-	localeHandler := locale.NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, &action)
+	localeService := loc.NewLocaleService(localeRepository)
+	localeHandler := loc.NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, &action)
 
 	reportDB, er8 := q.Open(cfg.AuditLog.DB)
 	if er8 != nil {

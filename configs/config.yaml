@@ -9,7 +9,7 @@ allow:
   credentials: true
   methods: GET,PUT,POST,DELETE,OPTIONS,PATCH
   headers: Access-Control-Allow-Headers,Authorization,Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers
-security_skip: true
+security_skip: false
 template: true
 
 log:
