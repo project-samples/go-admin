@@ -267,6 +267,19 @@ CREATE TABLE locale (
     currency_pattern int2 NULL,
     currency_sample varchar(40) NULL
 );
+create table country (
+    country_code varchar(5) NOT NULL PRIMARY KEY,
+    country_name varchar(255) NULL,
+    native_country_name varchar(255) NULL,
+    decimal_separator varchar(3) NULL,
+    group_separator varchar(3) NULL,
+    currency_code char(3) NULL,
+    currency_symbol varchar(6) NULL,
+    currency_decimal_digits int2 NULL,
+    currency_pattern int2 NULL,
+    currency_sample varchar(40) NULL,
+	status char(1) NULL
+);
 
 insert into currency(code,decimal_digits,symbol) values ('AED',2,'د.إ');
 insert into currency(code,decimal_digits,symbol) values ('AFN',2,'؋');
@@ -610,3 +623,14 @@ UPDATE locale l
 SET currency_symbol = c.symbol
     FROM currency c
 where l.currency_code = c.code;
+
+
+insert into country (country_code, currency_code, currency_symbol)
+select distinct country_code, currency_code, currency_symbol
+from locale order by country_code ;
+
+update country c
+set country_name = l.country_name, native_country_name = l.native_country_name , decimal_separator = l.decimal_separator, group_separator = l.group_separator,
+	currency_decimal_digits = l.currency_decimal_digits, currency_pattern = l.currency_pattern , status = 'A' 
+from locale l
+where c.country_code = l.country_code;

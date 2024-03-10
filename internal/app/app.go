@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"go-service/internal/country"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -49,6 +50,7 @@ type ApplicationContext struct {
 	User                 u.UserTransport
 	Currency             c.CurrencyTransport
 	Locale               loc.LocaleTransport
+	Country              country.CountryTransport
 	AuditLog             *audit.AuditLogHandler
 	Settings             *se.Handler
 }
@@ -197,6 +199,19 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	localeService := loc.NewLocaleService(localeRepository)
 	localeHandler := loc.NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, &action)
 
+	countryType := reflect.TypeOf(country.Country{})
+	queryCountry := query.UseQuery(db, "country", countryType)
+	countrySearchBuilder, err := q.NewSearchBuilder(db, countryType, queryCountry)
+	if err != nil {
+		return nil, err
+	}
+	countryRepository, err := q.NewRepository(db, "country", countryType)
+	if err != nil {
+		return nil, err
+	}
+	countryService := country.NewCountryService(countryRepository)
+	countryHandler := country.NewCountryHandler(countrySearchBuilder.Search, countryService, logError, validator.Validate, &action)
+
 	reportDB, er8 := q.Open(cfg.AuditLog.DB)
 	if er8 != nil {
 		return nil, er8
@@ -225,6 +240,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		User:                 userHandler,
 		Currency:             currencyHandler,
 		Locale:               localeHandler,
+		Country:              countryHandler,
 		AuditLog:             auditLogHandler,
 		Settings:             settingsHandler,
 	}

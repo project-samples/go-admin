@@ -14,6 +14,7 @@ const (
 	user = "user"
 	currency = "currency"
 	locale = "locale"
+	Country = "country"
 	audit_log   = "audit_log"
 )
 
@@ -66,6 +67,14 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Update, locale, c.ActionWrite, c.PUT)
 	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Patch, locale, c.ActionWrite, c.PATCH)
 	HandleWithSecurity(sec, locales, "/{localeId}", app.Locale.Delete, locale, c.ActionWrite, c.DELETE)
+
+	countries := r.PathPrefix("/countries").Subrouter()
+	HandleWithSecurity(sec, countries, "/search", app.Country.Search, Country, c.ActionRead, c.GET, c.POST)
+	HandleWithSecurity(sec, countries, "/{countryId}", app.Country.Load, Country, c.ActionRead, c.GET)
+	HandleWithSecurity(sec, countries, "", app.Country.Create, Country, c.ActionWrite, c.POST)
+	HandleWithSecurity(sec, countries, "/{countryId}", app.Country.Update, Country, c.ActionWrite, c.PUT)
+	HandleWithSecurity(sec, countries, "/{countryId}", app.Country.Patch, Country, c.ActionWrite, c.PATCH)
+	HandleWithSecurity(sec, countries, "/{countryId}", app.Country.Delete, Country, c.ActionWrite, c.DELETE)
 
 	HandleWithSecurity(sec, r, "/audit-logs", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, r, "/audit-logs/search", app.AuditLog.Search, audit_log, c.ActionRead, c.GET, c.POST)
