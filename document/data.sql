@@ -84,6 +84,7 @@ insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,a
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('audit_log','Audit Log','A','/audit-logs','audit_log','zoom_in',4,1,'admin');
 
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('currency','Currency','A','/currencies','currency','local_atm',1,7,'setup');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('country','Country','A','/countries','country','public',1,7,'setup');
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('locale','Locale','A','/locales','locale','public',1,7,'setup');
 
 insert into roles (roleid, rolename, status, remark) values ('admin','Admin','A','Admin');
@@ -624,7 +625,148 @@ SET currency_symbol = c.symbol
     FROM currency c
 where l.currency_code = c.code;
 
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('AF','Afghanistan','افغانستان','.',',','AFN','؋',2,0,'؋10.000,00','A'),
+	 ('AZ','Azerbaijan','Azərbaycan',',',' ','AZN','ман.',2,3,'10 000,00 man.','A'),
+	 ('BA','Bosnia and Herzegovina','Bosna i Hercegovina',',','.','BAM','KM',2,3,'10.000,00 KM','A'),
+	 ('BO','Bolivia','Bolivia',',','.','BOB','$b',2,2,'$b 10.000,00','A'),
+	 ('BR','Brazil','Brasil',',','.','BRL','R$',2,2,'R$ 10.000,00','A'),
+	 ('AL','Albania','Shqipëria',',','.','ALL','Lek',2,1,'10.000,00Lek','A'),
+	 ('AE','U.A.E.','الإمارات العربية المتحدة','.',',','AED','د.إ.‏',2,2,'د.إ.‏ 10,000.00','A'),
+	 ('AM','Armenia','Հայաստան','.',',','AMD','դր.',2,3,'10,000.00 դր.','A'),
+	 ('AR','Argentina','Argentina',',','.','ARS','$',2,2,'$ 10.000,00','A'),
+	 ('AU','Australia','Australia','.',',','AUD','$',2,0,'$10,000.00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('BD','Bangladesh','বাংলাদেশ','.',',','BDT','৳',2,2,'৳ 10,000.00','A'),
+	 ('BG','Bulgaria','България',',',' ','BGN','лв.',2,3,'10 000,00 лв.','A'),
+	 ('BH','Bahrain','البحرين','.',',','BHD','د.ب.‏',3,2,'د.ب.‏ 10,000.000','A'),
+	 ('BN','Brunei Darussalam','Brunei Darussalam',',','.','BND','$',0,0,'$10.00','A'),
+	 ('BY','Belarus','Беларусь',',',' ','BYR','р.',2,3,'10 000,00 р.','A'),
+	 ('CA','Canada','Canada','.',',','CAD','$',2,0,'$10,000.00','A'),
+	 ('CH','Switzerland','Schweiz','.','','CHF','Fr.',2,2,'Fr. 10''000.00','A'),
+	 ('CL','Chile','Chile',',','.','CLP','$',2,2,'$ 10.000,00','A'),
+	 ('CN','People''s Republic of China','中华人民共和国','.',',','CNY','¥',2,0,'¥10,000.00','A'),
+	 ('FR','France','France',',',' ','EUR','€',2,3,'10 000,00 €','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('CS','Serbia and Montenegro (Former)','Srbija i Crna Gora (Prethodno)',',','.','CSD','Дин.',2,3,'10.000,00 Din.','A'),
+	 ('DZ','Algeria','الجزائر','.',',','DZD','د.ج.‏',2,2,'د.ج.‏ 10,000.00','A'),
+	 ('FI','Finland','Suomi',',',' ','EUR','€',2,3,'10 000,00 €','A'),
+	 ('ME','Montenegro','Crna Gora',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('NL','Netherlands','Nederland',',','.','EUR','€',2,2,'€ 10.000,00','A'),
+	 ('BE','Belgium','België',',','.','EUR','€',2,2,'€ 10.000,00','A'),
+	 ('LU','Luxembourg','Luxembourg',',',' ','EUR','€',2,3,'10 000,00 €','A'),
+	 ('DE','Germany','Deutschland',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('ES','Spain','España',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('IE','Ireland','Éire','.',',','EUR','€',2,0,'€ 10,000.00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('GB','United Kingdom','United Kingdom','.',',','GBP','£',2,0,'£10,000.00','A'),
+	 ('GT','Guatemala','Guatemala','.',',','GTQ','Q',2,0,'Q10,000.00','A'),
+	 ('IN','India','भारत','.',',','INR',' ₹‎',2,2,'रु 10,000.00','A'),
+	 ('MY','Malaysia','Malaysia','.',',','MYR','RM',0,0,'RM10,000','A'),
+	 ('NO','Norway','Noreg',',',' ','NOK','kr',2,2,'kr 10 000,00','A'),
+	 ('NZ','New Zealand','New Zealand','.',',','NZD','$',2,0,'$10,000.00','A'),
+	 ('PE','Peru','Perú','.',',','PEN','S/.',2,2,'S/. 10,000.00','A'),
+	 ('PH','Philippines','Pilipinas','.',',','PHP','₱‎',2,0,'PhP10,000.00','A'),
+	 ('RS','Serbia','Srbija',',','.','RSD','Дин.',2,3,'10.000,00 Din.','A'),
+	 ('RU','Russia','Россия',',',' ','RUB','һ.',2,1,'10 000,00р.','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('SE','Sweden','Sverige',',','.','SEK','kr',2,3,'10 000,00 kr','A'),
+	 ('SG','Singapore','Singapore','.',',','SGD','$',2,0,'$10,000.00','A'),
+	 ('SY','Syria','سوريا','.',',','SYP','ل.س.‏',2,2,'ل.س.‏ 10,000.00','A'),
+	 ('LI','Liechtenstein','Liechtenstein','.','','CHF','Fr.',2,2,'CHF 10''000.00','A'),
+	 ('AT','Austria','Österreich',',','.','EUR','€',2,2,'€ 10.000,00','A'),
+	 ('CO','Colombia','Colombia',',','.','COP','$',2,2,'$ 10.000,00','A'),
+	 ('CR','Costa Rica','Costa Rica',',','.','CRC','₡',2,0,'₡10.000,00','A'),
+	 ('CZ','Czech Republic','Česká republika',',',' ','CZK','Kč',2,3,'10 000,00 Kč','A'),
+	 ('GL','Greenland','Kalaallit Nunaat',',','.','DKK','kr.',2,2,'kr. 10.000,00','A'),
+	 ('FO','Faroe Islands','Føroyar',',','.','DKK','kr.',2,2,'kr. 10.000,00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('DK','Denmark','Danmark',',','.','DKK','kr.',2,2,'kr. 10.000,00','A'),
+	 ('DO','Dominican Republic','República Dominicana','.',',','DOP','RD$',2,0,'RD$10,000.00','A'),
+	 ('EE','Estonia','Eesti','.',' ','EEK','kr',2,3,'10 000,00 kr','A'),
+	 ('EG','Egypt','مصر','.',',','EGP','ج.م.‏',2,2,'ج.م.‏ 10,000.00','A'),
+	 ('ET','Ethiopia','ኢትዮጵያ','.',',','ETB','ETB',2,0,'ETB10,000.00','A'),
+	 ('SI','Slovenia','Slovenija',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('SK','Slovakia','Slovenská republika',',',' ','EUR','€',2,3,'10 000,00 €','A'),
+	 ('PT','Portugal','Portugal',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('MT','Malta','Malta','.',',','EUR','€',2,0,'€ 10,000.00','A'),
+	 ('IT','Italy','Italia',',','.','EUR','€',2,2,'€ 10.000,00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('MC','Principality of Monaco','Principauté de Monaco',',',' ','EUR','€',2,3,'10 000,00 €','A'),
+	 ('GR','Greece','Ελλάδα',',','.','EUR','€',2,3,'10.000,00 €','A'),
+	 ('GE','Georgia','საქართველო',',',' ','GEL','Lari',2,3,'10 000,00 Lari','A'),
+	 ('HK','Hong Kong S.A.R.','香港特別行政區','.',',','HKD','HK$',2,0,'HK$10,000.00','A'),
+	 ('HN','Honduras','Honduras','.',',','HNL','L.',2,2,'L. 10,000.00','A'),
+	 ('HR','Croatia','Hrvatska',',','.','HRK','kn',2,3,'10.000,00 kn','A'),
+	 ('HU','Hungary','Magyarország',',',' ','HUF','Ft',2,3,'10 000,00 Ft','A'),
+	 ('BZ','Belize','Belize','.',',','BZD','BZ$',2,0,'BZ$10,000.00','A'),
+	 ('ID','Indonesia','Indonesia',',','.','IDR','Rp',0,0,'Rp10.000','A'),
+	 ('IL','Israel','ישראל','.',',','ILS','₪',2,2,'₪ 10,000.00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('IQ','Iraq','العراق','.',',','IQD','د.ع.‏',2,2,'د.ع.‏ 10,000.00','A'),
+	 ('IR','Iran','ایران','/',',','IRR','ريال',2,2,'ريال 10,000.00','A'),
+	 ('IS','Iceland','Ísland',',','.','ISK','kr.',0,3,'10.000 kr.','A'),
+	 ('JM','Jamaica','Jamaica','.',',','JMD','J$',2,0,'J$10,000.00','A'),
+	 ('JO','Jordan','الأردن','.',',','JOD','د.ا.‏',3,2,'د.ا.‏ 10,000.000','A'),
+	 ('JP','Japan','日本','.',',','JPY','¥',0,0,'¥10,000','A'),
+	 ('KE','Kenya','Kenya','.',',','KES','S',2,0,'S10,000.00','A'),
+	 ('KG','Kyrgyzstan','Кыргызстан','-',' ','KGS','сом',2,3,'10 000,00 сом','A'),
+	 ('KH','Cambodia','កម្ពុជា','.',',','KHR','៛',2,1,'10,000.00៛','A'),
+	 ('KR','Korea','대한민국','.',',','KRW','₩',0,0,'₩10,000','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('KW','Kuwait','الكويت','.',',','KWD','د.ك.‏',3,2,'د.ك.‏ 10,000.000','A'),
+	 ('KZ','Kazakhstan','Қазақстан','-',' ','KZT','Т',2,0,'Т10 000,00','A'),
+	 ('LA','Lao P.D.R.','ສ.ປ.ປ. ລາວ','.',',','LAK','₭',2,1,'10,000.00₭','A'),
+	 ('LB','Lebanon','لبنان','.',',','LBP','ل.ل.‏',2,2,'ل.ل.‏ 10,000.00','A'),
+	 ('LK','Sri Lanka','ශ්‍රී ලංකා','.',',','LKR','රු.',2,2,'රු. 10,000.00','A'),
+	 ('LT','Lithuania','Lietuva',',','.','LTL','Lt',2,3,'10.000,00 Lt','A'),
+	 ('LV','Latvia','Latvija',',',' ','LVL','Ls',2,2,'Ls 10 000,00','A'),
+	 ('LY','Libya','ليبيا','.',',','LYD','د.ل.‏',3,0,'د.ل.‏10,000.000','A'),
+	 ('MA','Morocco','المملكة المغربية','.',',','MAD','د.م.‏',2,2,'د.م.‏ 10,000.00','A'),
+	 ('MK','Macedonia (FYROM)','Македонија',',','.','MKD','ден.',2,3,'10.000,00 ден.','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('MN','Mongolia','Монгол улс',',',' ','MNT','₮',2,1,'10 000,00₮','A'),
+	 ('MO','Macao S.A.R.','澳門特別行政區','.',',','MOP','MOP',2,0,'MOP10,000.00','A'),
+	 ('PR','Puerto Rico','Puerto Rico','.',',','USD','$',2,2,'$10,000.00','A'),
+	 ('MV','Maldives','ދިވެހި ރާއްޖެ','.',',','MVR','ރ.',2,3,'10,000.00 ރ.','A'),
+	 ('MX','Mexico','México','.',',','MXN','$',2,0,'$10,000.00','A'),
+	 ('NG','Nigeria','Nigeria','.',',','NIO','C$',2,2,'N 10,000.00','A'),
+	 ('NI','Nicaragua','Nicaragua','.',',','NIO','C$',2,2,'C$ 10,000.00','A'),
+	 ('NP','Nepal','नेपाल','.',',','NPR','रु',2,0,'रु10,000.00','A'),
+	 ('OM','Oman','عمان','.',',','OMR','ر.ع.‏',3,2,'ر.ع.‏ 10,000.000','A'),
+	 ('PA','Panama','Panamá','.',',','PAB','B/.',2,2,'B/. 10,000.00','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('PK','Islamic Republic of Pakistan','پاکستان','.',',','PKR','Rs',2,0,'Rs10,000.00','A'),
+	 ('PL','Poland','Polska',',',' ','PLN','zł',2,3,'10 000,00 zł','A'),
+	 ('PY','Paraguay','Paraguay',',','.','PYG','Gs',2,2,'Gs 10.000,00','A'),
+	 ('QA','Qatar','قطر','.',',','QAR','ر.ق.‏',2,2,'ر.ق.‏ 10,000.00','A'),
+	 ('RO','Romania','România',',','.','RON','lei',2,3,'10.000,00 lei','A'),
+	 ('RW','Rwanda','Rwanda',',',' ','RWF','RWF',2,2,'RWF 10 000,00','A'),
+	 ('SA','Saudi Arabia','المملكة العربية السعودية','.',',','SAR','ر.س.‏',2,2,'ر.س.‏ 10,000.00','A'),
+	 ('TH','Thailand','ไทย','.',',','THB','฿',2,0,'฿10,000.00','A'),
+	 ('TJ','Tajikistan','Тоҷикистон',';',' ','TJS','т.р.',2,3,'10 000,00 т.р.','A'),
+	 ('TM','Turkmenistan','Türkmenistan',',',' ','TMT','m.',2,1,'10 000,00m.','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('TN','Tunisia','تونس','.',',','TND','د.ت.‏',3,2,'د.ت.‏ 10,000.000','A'),
+	 ('TR','Turkey','Türkiye',',','.','TRY','TL',2,3,'10.000,00 TL','A'),
+	 ('TT','Trinidad and Tobago','Trinidad y Tobago','.',',','TTD','TT$',2,0,'TT$10,000.00','A'),
+	 ('TW','Taiwan','台灣','.',',','TWD','NT$',2,0,'NT$10,000.00','A'),
+	 ('UA','Ukraine','Україна',',',' ','UAH','₴',2,1,'10 000,00₴','A'),
+	 ('SV','El Salvador','El Salvador','.',',','USD','$',2,0,'$10,000.00','A'),
+	 ('29','Caribbean','Caribbean','.',',','USD','$',2,0,'$10,000.00','A'),
+	 ('UY','Uruguay','Uruguay',',','.','UYU','$U',2,2,'$U 10.000,00','A'),
+	 ('VE','Bolivarian Republic of Venezuela','Republica Bolivariana de Venezuela',',','.','VEF','Bs. F.',2,2,'Bs. F. 10.000,00','A'),
+	 ('VN','Vietnam','Việt Nam',',','.','VND','₫',2,3,'10.000,00 ₫','A');
+insert into country (country_code,country_name,native_country_name,decimal_separator,group_separator,currency_code,currency_symbol,currency_decimal_digits,currency_pattern,currency_sample,status) values
+	 ('SN','Senegal','Sénégal',',',' ','XOF','XOF',2,3,'10 000,00 XOF','A'),
+	 ('YE','Yemen','اليمن','.',',','YER','ر.ي.‏',2,2,'ر.ي.‏ 10,000.00','A'),
+	 ('ZW','Zimbabwe','Zimbabwe','.',',','ZWL','Z$',2,0,'Z$10,000.00','A'),
+	 ('EC','Ecuador','Ecuador',',','.','USD','$',2,2,'$ 10.000,00','A'),
+	 ('US','United States','United States','.',',','USD','$',2,0,'$10,000.00','A'),
+	 ('UZ','Uzbekistan','U''zbekiston Respublikasi',',',' ','UZS','лв',0,3,'10 000 so''m','A'),
+	 ('ZA','South Africa','South Africa',',',' ','ZAR','R',2,2,'R 10 000.00','A');
 
+/*
 insert into country (country_code, currency_code, currency_symbol)
 select distinct country_code, currency_code, currency_symbol
 from locale order by country_code ;
@@ -634,3 +776,4 @@ set country_name = l.country_name, native_country_name = l.native_country_name ,
 	currency_decimal_digits = l.currency_decimal_digits, currency_pattern = l.currency_pattern , status = 'A' 
 from locale l
 where c.country_code = l.country_code;
+ */
