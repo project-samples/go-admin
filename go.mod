@@ -3,8 +3,8 @@ module go-service
 go 1.17
 
 require (
-	github.com/core-go/auth v0.2.7
-	github.com/core-go/core v0.6.0
+	github.com/core-go/auth v0.3.1
+	github.com/core-go/core v0.6.1
 	github.com/core-go/log v1.0.0
 	github.com/core-go/search v1.0.2
 	github.com/core-go/sql v0.5.8
