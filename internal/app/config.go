@@ -1,6 +1,8 @@
 package app
 
 import (
+	"time"
+
 	"github.com/core-go/auth/ldap"
 	q "github.com/core-go/auth/sql"
 	"github.com/core-go/core"
@@ -8,6 +10,7 @@ import (
 	"github.com/core-go/core/builder"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/cors"
+	redis "github.com/core-go/core/redis/v8"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/sql"
@@ -33,6 +36,8 @@ type Config struct {
 	Action       *core.ActionConfig     `mapstructure:"action"`
 	Tracking     builder.TrackingConfig `mapstructure:"tracking"`
 	Sql          SqlStatement           `mapstructure:"sql"`
+	Session      SessionConfig          `mapstructure:"session"`
+	Redis        redis.Config           `mapstructure:"redis"`
 }
 type SqlStatement struct {
 	Privileges        string        `mapstructure:"privileges"`
@@ -42,4 +47,9 @@ type SqlStatement struct {
 }
 type RoleStatement struct {
 	Check string `mapstructure:"check"`
+}
+type SessionConfig struct {
+	Secret      string        `yaml:"secret" mapstructure:"secret"`
+	ExpiredTime time.Duration `mapstructure:"expired_time"`
+	Host        string        `mapstructure:"host"`
 }

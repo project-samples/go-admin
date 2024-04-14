@@ -16,7 +16,7 @@ const (
 	currency = "currency"
 	locale = "locale"
 	Country = "country"
-	audit_log   = "audit_log"
+	audit_log = "audit_log"
 )
 
 func Route(r *mux.Router, ctx context.Context, conf Config) error {
@@ -25,10 +25,16 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 		return err
 	}
 	r.Use(app.Authorization.HandleAuthorization)
-	sec := &s.SecurityConfig{SecuritySkip: conf.SecuritySkip, Check: app.AuthorizationChecker.Check, Authorize: app.Authorizer.Authorize}
+	wa := &WrapAuth{false, app.SessionAuthorizer.Authorize}
+	sec := &s.SecurityConfig{
+		SecuritySkip: conf.SecuritySkip,
+		Check:        wa.Check,
+		Authorize:    app.Authorizer.Authorize,
+	}
 
 	Handle(r, "/health", app.Health.Check, c.GET)
 	Handle(r, "/authenticate", app.Authentication.Authenticate, c.POST)
+	Handle(r, "/authentication/signout", app.Authentication.Logout, c.GET)
 
 	r.Handle("/code/{code}", app.AuthorizationChecker.Check(http.HandlerFunc(app.Code.Load))).Methods(c.GET)
 	r.Handle("/settings", app.AuthorizationChecker.Check(http.HandlerFunc(app.Settings.Save))).Methods(c.PATCH)
@@ -94,4 +100,12 @@ func HandleWithSecurity(authorizer *s.SecurityConfig, r *mux.Router, path string
 		return authorizer.Authorize(next, menuId, action)
 	}
 	return r.Handle(path, authorizer.Check(authorize(finalHandler))).Methods(methods...)
+}
+type WrapAuth struct {
+	isSkip    bool
+	Authorize func(next http.Handler, skipRefreshTTL bool) http.Handler
+}
+
+func (h WrapAuth) Check(next http.Handler) http.Handler {
+	return h.Authorize(next, h.isSkip)
 }
