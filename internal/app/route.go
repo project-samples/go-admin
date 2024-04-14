@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	c "github.com/core-go/core/constants"
+	m "github.com/core-go/core/mux"
 	s "github.com/core-go/core/security"
 	"github.com/gorilla/mux"
 )
@@ -45,7 +46,7 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	users := r.PathPrefix("/users").Subrouter()
 	HandleWithSecurity(sec, users, "", app.User.GetUserByRole, role, c.ActionRead, c.GET)
 
-	HandleWithSecurity(sec, users, "/search", app.User.Search, user, c.ActionRead, c.GET, c.POST)
+	m.HandleWithSecurity(users, "/search", app.User.Search, sec.Check, sec.Authorize, user, c.ActionRead, c.GET, c.POST)
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Load, user, c.ActionRead, c.GET)
 	HandleWithSecurity(sec, users, "", app.User.Create, user, c.ActionWrite, c.POST)
 	HandleWithSecurity(sec, users, "/{userId}", app.User.Update, user, c.ActionWrite, c.PUT)

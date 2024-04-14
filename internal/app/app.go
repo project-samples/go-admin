@@ -87,9 +87,9 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	sqlPrivilegeLoader := ss.NewPrivilegeLoader(db, cfg.Sql.PermissionsByUser)
 
 	userId := cfg.Tracking.User
-	tokenAdapter := jwt.NewTokenAdapter()
-	authorizationHandler := authorization.NewHandler(tokenAdapter.GetAndVerifyToken, cfg.Auth.Token.Secret)
-	authorizationChecker := sec.NewDefaultAuthorizationChecker(tokenAdapter.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
+	tokenPort := jwt.NewTokenAdapter()
+	authorizationHandler := authorization.NewHandler(tokenPort.GetAndVerifyToken, cfg.Auth.Token.Secret)
+	authorizationChecker := sec.NewDefaultAuthorizationChecker(tokenPort.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
 	authorizer := sec.NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
 	authStatus := auth.InitStatus(cfg.Auth.Status)
@@ -101,13 +101,12 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if er3 != nil {
 		return nil, er3
 	}
-	privilegeAdapter, er4 := as.NewSqlPrivilegesAdapter(db, cfg.Sql.PrivilegesByUser, 1, true)
+	privilegePort, er4 := as.NewSqlPrivilegesAdapter(db, cfg.Sql.PrivilegesByUser, 1, true)
 	if er4 != nil {
 		return nil, er4
 	}
-	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userPort, tokenAdapter.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegeAdapter.Load)
+	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userPort, tokenPort.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegePort.Load)
 	authenticationHandler := ah.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
-	authenticationHandler.Cookie = false
 
 	privilegeReader, er5 := as.NewPrivilegesReader(db, cfg.Sql.Privileges)
 	if er5 != nil {
