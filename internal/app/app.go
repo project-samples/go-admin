@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"go-service/internal/country"
 	"reflect"
 
 	"github.com/core-go/auth"
@@ -30,6 +29,7 @@ import (
 	"github.com/core-go/sql/template/xml"
 
 	"go-service/internal/audit-log"
+	"go-service/internal/country"
 	c "go-service/internal/currency"
 	loc "go-service/internal/locale"
 	r "go-service/internal/role"
@@ -87,9 +87,9 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	sqlPrivilegeLoader := ss.NewPrivilegeLoader(db, cfg.Sql.PermissionsByUser)
 
 	userId := cfg.Tracking.User
-	tokenService := jwt.NewTokenService()
-	authorizationHandler := authorization.NewHandler(tokenService.GetAndVerifyToken, cfg.Auth.Token.Secret)
-	authorizationChecker := sec.NewDefaultAuthorizationChecker(tokenService.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
+	tokenAdapter := jwt.NewTokenAdapter()
+	authorizationHandler := authorization.NewHandler(tokenAdapter.GetAndVerifyToken, cfg.Auth.Token.Secret)
+	authorizationChecker := sec.NewDefaultAuthorizationChecker(tokenAdapter.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
 	authorizer := sec.NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
 	authStatus := auth.InitStatus(cfg.Auth.Status)
@@ -97,15 +97,15 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	if er2 != nil {
 		return nil, er2
 	}
-	userInfoService, er3 := as.NewUserRepository(db, cfg.Auth.Query, cfg.Auth.DB, cfg.Auth.UserStatus)
+	userPort, er3 := as.NewUserAdapter(db, cfg.Auth.Query, cfg.Auth.DB, cfg.Auth.UserStatus)
 	if er3 != nil {
 		return nil, er3
 	}
-	privilegeLoader, er4 := as.NewSqlPrivilegesLoader(db, cfg.Sql.PrivilegesByUser, 1, true)
+	privilegeAdapter, er4 := as.NewSqlPrivilegesAdapter(db, cfg.Sql.PrivilegesByUser, 1, true)
 	if er4 != nil {
 		return nil, er4
 	}
-	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userInfoService, tokenService.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegeLoader.Load)
+	authenticator := auth.NewBasicAuthenticator(authStatus, ldapAuthenticator.Authenticate, userPort, tokenAdapter.GenerateToken, cfg.Auth.Token, cfg.Auth.Payload, privilegeAdapter.Load)
 	authenticationHandler := ah.NewAuthenticationHandler(authenticator.Authenticate, authStatus.Error, authStatus.Timeout, logError, writeLog)
 	authenticationHandler.Cookie = false
 
