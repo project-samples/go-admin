@@ -34,10 +34,10 @@ github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWR
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
-github.com/core-go/auth v0.3.3 h1:+gqoDyH8j6w/drGUy6W52kSG63QMaymCupVfVFVw+mA=
-github.com/core-go/auth v0.3.3/go.mod h1:E56GGko1ap447bHGeQmZE6NsddcDfbCd7W0fChFbm6g=
-github.com/core-go/core v0.6.3 h1:QGf9QaBQyipiQubRJlqV3UN0chi9dKONP8COEBEyxR8=
-github.com/core-go/core v0.6.3/go.mod h1:bfN1xcZGpu0cnA6qhv/JyTkFHnk9IJgqd/JnevDxGkA=
+github.com/core-go/auth v0.3.4 h1:K4yd119+0KoHsx8FY174F4/JxOqGerG1QPBfj2uLHRQ=
+github.com/core-go/auth v0.3.4/go.mod h1:E56GGko1ap447bHGeQmZE6NsddcDfbCd7W0fChFbm6g=
+github.com/core-go/core v0.6.4 h1:7JCw0avnBBByS07lXPq1ffYVP50MLX9wyKY7r+0lmpE=
+github.com/core-go/core v0.6.4/go.mod h1:bfN1xcZGpu0cnA6qhv/JyTkFHnk9IJgqd/JnevDxGkA=
 github.com/core-go/log v1.0.1 h1:S9I7HWeDBK3hNXOtEavRulDp7D7uYWKbjwAYdrKOvJk=
 github.com/core-go/log v1.0.1/go.mod h1:nLtakp+tnvjYestj7RVMXHnZ3GMfMpeZvl9Gzo7xz6o=
 github.com/core-go/search v1.0.2 h1:NvP7B9rrjud5LhhSWgTV6SZ9sThopYjfagrj/zO/Vbo=

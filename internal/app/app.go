@@ -12,7 +12,7 @@ import (
 	"github.com/core-go/core"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
-	cookies "github.com/core-go/core/cookies"
+	"github.com/core-go/core/cookies"
 	"github.com/core-go/core/health"
 	"github.com/core-go/core/jwt"
 	redis "github.com/core-go/core/redis/v8"
@@ -70,17 +70,16 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	sqlHealthChecker := q.NewHealthChecker(db)
 	var healthHandler *health.Handler
-	cacheRedis, err := redis.NewRedisAdapterByConfig(cfg.Redis)
+	cachePort, err := redis.NewRedisAdapterByConfig(cfg.Redis)
 	if err != nil {
 		return nil, err
 	}
 	{
-		err := cacheRedis.Client.Ping(ctx).Err()
+		err := cachePort.Client.Ping(ctx).Err()
 		if err != nil {
 			return nil, err
 		}
 	}
-
 	logError := log.LogError
 	generateId := shortid.Generate
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
@@ -130,12 +129,11 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	authenticationHandler := ah.NewAuthenticationHandlerWithCache(
 		authenticator.Authenticate,
 		authStatus.Error,
-		authStatus.Timeout, logError, cacheRedis, generateUUID, cfg.Session.ExpiredTime, cfg.Session.Host, http.SameSiteStrictMode, true, true, writeLog)
-	jTokenSvc := jwt.NewTokenService()
+		authStatus.Timeout, logError, cachePort, generateUUID, cfg.Session.ExpiredTime, cfg.Session.Host, http.SameSiteStrictMode, true, true, writeLog)
+	// jTokenSvc := jwt.NewTokenService()
 	co := cookies.NewCookies("id", cfg.Session.Host, cfg.Session.ExpiredTime, http.SameSiteStrictMode)
 
-	sessionAuthorizer := sec.NewSessionAuthorizer(cfg.Auth.Token.Secret, jTokenSvc.VerifyToken, co.RefreshValue,
-		cacheRedis, cfg.Session.ExpiredTime, logError, true, nil, nil)
+	sessionAuthorizer := sec.NewSessionAuthorizer(cfg.Auth.Token.Secret, tokenPort.VerifyToken, co.RefreshValue, cachePort, cfg.Session.ExpiredTime, logError, true, nil, nil)
 
 	privilegeReader, er5 := as.NewPrivilegesReader(db, cfg.Sql.Privileges)
 	if er5 != nil {

@@ -24,7 +24,7 @@ func Route(r *mux.Router, ctx context.Context, conf Config) error {
 	if err != nil {
 		return err
 	}
-	r.Use(app.Authorization.HandleAuthorization)
+	// r.Use(app.Authorization.HandleAuthorization)
 	wa := &WrapAuth{false, app.SessionAuthorizer.Authorize}
 	sec := &s.SecurityConfig{
 		SecuritySkip: conf.SecuritySkip,
