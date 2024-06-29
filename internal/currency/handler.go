@@ -2,20 +2,12 @@ package currency
 
 import (
 	"context"
-	"github.com/core-go/core"
-	"github.com/core-go/search"
 	"net/http"
 	"reflect"
-)
 
-type CurrencyTransport interface {
-	Search(w http.ResponseWriter, r *http.Request)
-	Load(w http.ResponseWriter, r *http.Request)
-	Create(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
-	Patch(w http.ResponseWriter, r *http.Request)
-	Delete(w http.ResponseWriter, r *http.Request)
-}
+	"github.com/core-go/core"
+	"github.com/core-go/search"
+)
 
 func NewCurrencyHandler(find func(context.Context, interface{}, interface{}, int64, int64) (int64, error), service CurrencyService, logError core.Log, validate func(context.Context, interface{}) ([]core.ErrorMessage, error), action *core.ActionConfig) CurrencyTransport {
 	filterType := reflect.TypeOf(CurrencyFilter{})

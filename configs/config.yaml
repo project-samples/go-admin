@@ -77,7 +77,7 @@ auth:
 
 db:
   driver: postgres
-  data_source_name: postgres://postgres:abcd1234@localhost/back-office?sslmode=disable
+  data_source_name: postgres://postgres:abcd1234@localhost/backoffice?sslmode=disable
 
 tracking:
   user: userId
@@ -123,7 +123,7 @@ audit_log:
   log: true
   db:
     driver: postgres
-    data_source_name: postgres://postgres:abcd1234@localhost/back-office?sslmode=disable
+    data_source_name: postgres://postgres:abcd1234@localhost/backoffice?sslmode=disable
   schema:
     id: id
     user: userid

@@ -22,7 +22,7 @@ type RoleTransport interface {
 
 func NewRoleHandler(
 	find core.Search,
-	roleService RoleRepository,
+	roleService RoleService,
 	generateId core.Generate,
 	validate core.Validate,
 	logError core.Log,

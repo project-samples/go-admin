@@ -2,20 +2,12 @@ package country
 
 import (
 	"context"
-	sv "github.com/core-go/core"
-	"github.com/core-go/search"
 	"net/http"
 	"reflect"
-)
 
-type CountryTransport interface {
-	Search(w http.ResponseWriter, r *http.Request)
-	Load(w http.ResponseWriter, r *http.Request)
-	Create(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
-	Patch(w http.ResponseWriter, r *http.Request)
-	Delete(w http.ResponseWriter, r *http.Request)
-}
+	sv "github.com/core-go/core"
+	"github.com/core-go/search"
+)
 
 func NewCountryHandler(find func(context.Context, interface{}, interface{}, int64, int64) (int64, error), service CountryService, logError sv.Log, validate func(context.Context, interface{}) ([]sv.ErrorMessage, error), action *sv.ActionConfig) CountryTransport {
 	filterType := reflect.TypeOf(CountryFilter{})
@@ -73,7 +65,7 @@ func (h *CountryHandler) Patch(w http.ResponseWriter, r *http.Request) {
 }
 func (h *CountryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := sv.GetRequiredParam(w, r)
-    if len(id) > 0 {
+	if len(id) > 0 {
 		res, err := h.service.Delete(r.Context(), id)
 		sv.HandleDelete(w, r, res, err, h.Error, h.Log, h.Resource, h.Action.Delete)
 	}

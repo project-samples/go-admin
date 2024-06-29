@@ -161,6 +161,7 @@ insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'us
 insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'role', 7);
 insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'audit_log', 7);
 insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'setup', 7);
+insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'country', 7);
 insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'currency', 7);
 insert into rolemodules(roleid, moduleid, permissions) values ('it_support', 'locale', 7);
 

@@ -2,14 +2,10 @@ package app
 
 import (
 	"context"
-	"net/http"
-	"reflect"
-
 	"github.com/core-go/auth"
 	ah "github.com/core-go/auth/handler"
 	"github.com/core-go/auth/mock"
 	as "github.com/core-go/auth/sql"
-	"github.com/core-go/core"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/cookies"
@@ -20,17 +16,14 @@ import (
 	ss "github.com/core-go/core/security/sql"
 	se "github.com/core-go/core/settings"
 	"github.com/core-go/core/shortid"
-	"github.com/core-go/core/unique"
 	ur "github.com/core-go/core/user"
-	v10 "github.com/core-go/core/v10"
 	log "github.com/core-go/log/zap"
-	"github.com/core-go/search/convert"
-	"github.com/core-go/search/query"
 	q "github.com/core-go/sql"
 	sa "github.com/core-go/sql/action"
 	"github.com/core-go/sql/template"
 	"github.com/core-go/sql/template/xml"
 	"github.com/google/uuid"
+	"net/http"
 
 	"go-service/internal/audit-log"
 	"go-service/internal/country"
@@ -96,11 +89,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	} else {
 		healthHandler = health.NewHandler(sqlHealthChecker)
 	}
-	buildParam := q.GetBuild(db)
-	validator, err := v10.NewValidator()
-	if err != nil {
-		return nil, err
-	}
+
 	sqlPrivilegeLoader := ss.NewPrivilegeLoader(db, cfg.Sql.PermissionsByUser)
 
 	userId := cfg.Tracking.User
@@ -160,83 +149,26 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, cfg.Role.Handler, logError)
 
-	roleType := reflect.TypeOf(r.Role{})
-	queryRole, err := template.GetQuery(cfg.Template, query.UseQuery(db, "roles", roleType, buildParam), "role", templates, &roleType, convert.ToMap, buildParam, q.GetSort)
+	roleHandler, err := r.NewRoleTransport(db, cfg.Sql.Role.Check, logError, templates, cfg.Tracking, writeLog, cfg.Action)
 	if err != nil {
 		return nil, err
 	}
-	roleSearchBuilder, err := q.NewSearchBuilder(db, roleType, queryRole)
-	if err != nil {
-		return nil, err
-	}
-	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.validateFileName)
-	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(r.Role{}), validator.Validate)
-	roleRepository, er6 := r.NewRoleAdapter(db, cfg.Sql.Role.Check)
-	if er6 != nil {
-		return nil, er6
-	}
-	roleService := r.NewRoleService(roleRepository)
-	generateRoleId := shortid.Func(cfg.AutoRoleId)
-	roleHandler := r.NewRoleHandler(roleSearchBuilder.Search, roleService, generateRoleId, roleValidator.Validate, logError, writeLog, cfg.Action, cfg.Tracking)
 
-	userType := reflect.TypeOf(u.User{})
-	queryUser, err := template.GetQuery(cfg.Template, query.UseQuery(db, "users", userType, buildParam), "user", templates, &userType, convert.ToMap, buildParam, q.GetSort)
+	userHandler, err := u.NewUserTransport(db, logError, templates, cfg.Tracking, writeLog, cfg.Action)
 	if err != nil {
 		return nil, err
 	}
-	userSearchBuilder, err := q.NewSearchBuilder(db, userType, queryUser)
-	if err != nil {
-		return nil, err
-	}
-	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.validateFileName)
-	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(u.User{}), validator.Validate)
-	userRepository, er7 := u.NewUserAdapter(db)
-	if er7 != nil {
-		return nil, er7
-	}
-	userService := u.NewUserService(userRepository)
-	generateUserId := shortid.Func(cfg.AutoUserId)
-	userHandler := u.NewUserHandler(userSearchBuilder.Search, userService, generateUserId, userValidator.Validate, logError, writeLog, cfg.Action, cfg.Tracking)
 
-	action := core.InitializeAction(cfg.Action)
-	currencyType := reflect.TypeOf(c.Currency{})
-	currencyQueryBuilder := query.UseQuery(db, "currency", currencyType)
-	currencySearchBuilder, err := q.NewSearchBuilder(db, currencyType, currencyQueryBuilder)
+	currencyHandler, err := c.NewCurrencyTransport(db, logError, cfg.Action)
 	if err != nil {
 		return nil, err
 	}
-	currencyRepository, err := q.NewRepository(db, "currency", currencyType)
-	if err != nil {
-		return nil, err
-	}
-	currencyService := c.NewCurrencyService(currencyRepository)
-	currencyHandler := c.NewCurrencyHandler(currencySearchBuilder.Search, currencyService, logError, validator.Validate, &action)
 
-	localeType := reflect.TypeOf(loc.Locale{})
-	queryLocale := query.UseQuery(db, "locale", localeType)
-	localeSearchBuilder, err := q.NewSearchBuilder(db, localeType, queryLocale)
+	localeHandler, err := loc.NewLocaleTransport(db, logError, cfg.Action)
 	if err != nil {
 		return nil, err
 	}
-	localeRepository, err := q.NewRepository(db, "locale", localeType)
-	if err != nil {
-		return nil, err
-	}
-	localeService := loc.NewLocaleService(localeRepository)
-	localeHandler := loc.NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, &action)
-
-	countryType := reflect.TypeOf(country.Country{})
-	queryCountry := query.UseQuery(db, "country", countryType)
-	countrySearchBuilder, err := q.NewSearchBuilder(db, countryType, queryCountry)
-	if err != nil {
-		return nil, err
-	}
-	countryRepository, err := q.NewRepository(db, "country", countryType)
-	if err != nil {
-		return nil, err
-	}
-	countryService := country.NewCountryService(countryRepository)
-	countryHandler := country.NewCountryHandler(countrySearchBuilder.Search, countryService, logError, validator.Validate, &action)
+	countryHandler, err := country.NewCountryTransport(db, logError, cfg.Action)
 
 	reportDB, er8 := q.Open(cfg.AuditLog.DB)
 	if er8 != nil {
@@ -250,6 +182,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	auditLogHandler := audit.NewAuditLogHandler(auditLogQuery, logError)
 
+	buildParam := q.GetBuild(db)
 	settingsHandler := se.NewSettingsHandler(logError, writeLog, db, "users", buildParam, "userId", "userid", "dateformat", "language")
 
 	app := &ApplicationContext{
