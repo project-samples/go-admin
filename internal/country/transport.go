@@ -3,13 +3,12 @@ package country
 import (
 	"context"
 	"database/sql"
-	"net/http"
-	"reflect"
-
 	"github.com/core-go/core"
-	v10 "github.com/core-go/core/v10"
-	"github.com/core-go/search/query"
-	q "github.com/core-go/sql"
+	sv "github.com/core-go/core/sql"
+	val "github.com/core-go/core/validator"
+	"github.com/core-go/sql/adapter"
+	"github.com/core-go/sql/query/builder"
+	"net/http"
 )
 
 type CountryTransport interface {
@@ -21,22 +20,21 @@ type CountryTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewCountryTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), action *core.ActionConfig) (CountryTransport, error) {
-	validator, err := v10.NewValidator()
+func NewCountryTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), writeLog core.WriteLog, action *core.ActionConf) (CountryTransport, error) {
+	validator, err := val.NewValidator[*Country]()
 	if err != nil {
 		return nil, err
 	}
-	countryType := reflect.TypeOf(Country{})
-	queryCountry := query.UseQuery(db, "country", countryType)
-	countrySearchBuilder, err := q.NewSearchBuilder(db, countryType, queryCountry)
+	queryCountry := builder.UseQuery[Country, *CountryFilter](db, "country")
+	countrySearchBuilder, err := adapter.NewSearchAdapter[Country, string, *CountryFilter](db, "country", queryCountry)
 	if err != nil {
 		return nil, err
 	}
-	countryRepository, err := q.NewRepository(db, "country", countryType)
+	countryRepository, err := adapter.NewAdapter[Country, string](db, "country")
 	if err != nil {
 		return nil, err
 	}
-	countryService := NewCountryService(countryRepository)
-	countryHandler := NewCountryHandler(countrySearchBuilder.Search, countryService, logError, validator.Validate, action)
+	countryService := sv.NewService[Country, string](db, countryRepository)
+	countryHandler := NewCountryHandler(countrySearchBuilder.Search, countryService, logError, validator.Validate, writeLog, action)
 	return countryHandler, nil
 }

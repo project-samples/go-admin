@@ -3,13 +3,12 @@ package locale
 import (
 	"context"
 	"database/sql"
-	"net/http"
-	"reflect"
-
 	"github.com/core-go/core"
-	v10 "github.com/core-go/core/v10"
-	"github.com/core-go/search/query"
-	q "github.com/core-go/sql"
+	sv "github.com/core-go/core/sql"
+	val "github.com/core-go/core/validator"
+	"github.com/core-go/sql/adapter"
+	"github.com/core-go/sql/query/builder"
+	"net/http"
 )
 
 type LocaleTransport interface {
@@ -22,21 +21,20 @@ type LocaleTransport interface {
 }
 
 func NewLocaleTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), action *core.ActionConfig) (LocaleTransport, error) {
-	validator, err := v10.NewValidator()
+	validator, err := val.NewValidator[*Locale]()
 	if err != nil {
 		return nil, err
 	}
-	localeType := reflect.TypeOf(Locale{})
-	queryLocale := query.UseQuery(db, "locale", localeType)
-	localeSearchBuilder, err := q.NewSearchBuilder(db, localeType, queryLocale)
+	queryLocale := builder.UseQuery[Locale, *LocaleFilter](db, "locale")
+	localeSearchBuilder, err := adapter.NewSearchAdapter[Locale, string, *LocaleFilter](db, "locale", queryLocale)
 	if err != nil {
 		return nil, err
 	}
-	localeRepository, err := q.NewRepository(db, "locale", localeType)
+	localeRepository, err := adapter.NewAdapter[Locale, string](db, "locale")
 	if err != nil {
 		return nil, err
 	}
-	localeService := NewLocaleService(localeRepository)
+	localeService := sv.NewService[Locale, string](db, localeRepository)
 	localeHandler := NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, action)
 	return localeHandler, nil
 }

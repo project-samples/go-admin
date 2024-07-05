@@ -3,13 +3,12 @@ package currency
 import (
 	"context"
 	"database/sql"
-	"net/http"
-	"reflect"
-
 	"github.com/core-go/core"
-	v10 "github.com/core-go/core/v10"
-	"github.com/core-go/search/query"
-	q "github.com/core-go/sql"
+	sv "github.com/core-go/core/sql"
+	val "github.com/core-go/core/validator"
+	"github.com/core-go/sql/adapter"
+	"github.com/core-go/sql/query/builder"
+	"net/http"
 )
 
 type CurrencyTransport interface {
@@ -21,22 +20,21 @@ type CurrencyTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewCurrencyTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), action *core.ActionConfig) (CurrencyTransport, error) {
-	validator, err := v10.NewValidator()
+func NewCurrencyTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), writeLog core.WriteLog, action *core.ActionConf) (CurrencyTransport, error) {
+	validator, err := val.NewValidator[*Currency]()
 	if err != nil {
 		return nil, err
 	}
-	currencyType := reflect.TypeOf(Currency{})
-	queryCurrency := query.UseQuery(db, "currency", currencyType)
-	currencySearchBuilder, err := q.NewSearchBuilder(db, currencyType, queryCurrency)
+	queryCurrency := builder.UseQuery[Currency, *CurrencyFilter](db, "currency")
+	currencySearchBuilder, err := adapter.NewSearchAdapter[Currency, string, *CurrencyFilter](db, "currency", queryCurrency)
 	if err != nil {
 		return nil, err
 	}
-	currencyRepository, err := q.NewRepository(db, "currency", currencyType)
+	currencyRepository, err := adapter.NewAdapter[Currency, string](db, "currency")
 	if err != nil {
 		return nil, err
 	}
-	currencyService := NewCurrencyService(currencyRepository)
-	currencyHandler := NewCurrencyHandler(currencySearchBuilder.Search, currencyService, logError, validator.Validate, action)
+	currencyService := sv.NewService[Currency, string](db, currencyRepository)
+	currencyHandler := NewCurrencyHandler(currencySearchBuilder.Search, currencyService, logError, validator.Validate, writeLog, action)
 	return currencyHandler, nil
 }

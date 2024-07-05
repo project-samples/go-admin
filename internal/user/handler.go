@@ -1,30 +1,30 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/core-go/core"
-	"github.com/core-go/core/builder"
-	"github.com/core-go/search"
+	b "github.com/core-go/core/builder"
+	search "github.com/core-go/search/handler"
 )
 
 func NewUserHandler(
-	find core.Search,
+	find func(context.Context, *UserFilter, int64, int64) ([]User, int64, error),
 	userService UserService,
 	generateId core.Generate,
 	validate core.Validate,
 	logError core.Log,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
-	tracking builder.TrackingConfig,
+	tracking b.TrackingConfig,
 ) *UserHandler {
 	userType := reflect.TypeOf(User{})
-	filterType := reflect.TypeOf(UserFilter{})
-	builder := builder.NewBuilderWithIdAndConfig(generateId, userType, tracking)
+	builder := b.NewBuilderWithIdAndConfig(generateId, userType, tracking)
 	patchHandler, params := core.CreatePatchAndParams(userType, logError, userService.Patch, validate, builder.Patch, action, writeLog)
-	searchHandler := search.NewSearchHandler(find, userType, filterType, logError, nil)
+	searchHandler := search.NewSearchHandler(find, logError, nil)
 	return &UserHandler{service: userService, builder: builder, PatchHandler: patchHandler, SearchHandler: searchHandler, Params: params}
 }
 
@@ -32,7 +32,7 @@ type UserHandler struct {
 	service UserService
 	builder core.Builder
 	*core.PatchHandler
-	*search.SearchHandler
+	*search.SearchHandler[User, *UserFilter]
 	*core.Params
 }
 

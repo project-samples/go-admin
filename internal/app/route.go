@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	role = "role"
-	user = "user"
-	currency = "currency"
-	locale = "locale"
-	Country = "country"
+	role      = "role"
+	user      = "user"
+	currency  = "currency"
+	locale    = "locale"
+	Country   = "country"
 	audit_log = "audit_log"
 )
 
@@ -101,6 +101,7 @@ func HandleWithSecurity(authorizer *s.SecurityConfig, r *mux.Router, path string
 	}
 	return r.Handle(path, authorizer.Check(authorize(finalHandler))).Methods(methods...)
 }
+
 type WrapAuth struct {
 	isSkip    bool
 	Authorize func(next http.Handler, skipRefreshTTL bool) http.Handler

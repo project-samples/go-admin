@@ -1,13 +1,15 @@
 package role
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/core-go/core"
-	"github.com/core-go/core/builder"
-	"github.com/core-go/search"
+	hdl "github.com/core-go/core/handler"
+	"github.com/core-go/core/handler/builder"
+	search "github.com/core-go/search/handler"
 )
 
 type RoleTransport interface {
@@ -21,27 +23,25 @@ type RoleTransport interface {
 }
 
 func NewRoleHandler(
-	find core.Search,
+	find func(context.Context, *RoleFilter, int64, int64) ([]Role, int64, error),
 	roleService RoleService,
 	generateId core.Generate,
 	validate core.Validate,
 	logError core.Log,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
-	tracking builder.TrackingConfig,
 ) *RoleHandler {
 	roleType := reflect.TypeOf(Role{})
-	searchModelType := reflect.TypeOf(RoleFilter{})
-	builder := builder.NewBuilderWithIdAndConfig(generateId, roleType, tracking)
+	builder := builder.NewBuilder[Role](nil, "CreatedBy", "CreatedAt", "UpdatedBy", "UpdatedAt")
 	params := core.CreateParams(roleType, logError, validate, action, writeLog)
-	searchHandler := search.NewSearchHandler(find, roleType, searchModelType, logError, nil)
+	searchHandler := search.NewSearchHandler[Role, *RoleFilter](find, logError, nil)
 	return &RoleHandler{service: roleService, builder: builder, SearchHandler: searchHandler, Params: params}
 }
 
 type RoleHandler struct {
 	service RoleRepository
-	builder core.Builder
-	*search.SearchHandler
+	builder hdl.Builder[Role]
+	*search.SearchHandler[Role, *RoleFilter]
 	*core.Params
 }
 
@@ -63,7 +63,7 @@ func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
 }
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var role Role
-	er1 := core.Decode(w, r, &role, h.builder.Create)
+	er1 := hdl.Decode(w, r, &role, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.Validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
@@ -83,8 +83,7 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var role Role
-	err := core.DecodeAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Update)
+	role, err := hdl.DecodeAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.Validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
@@ -107,8 +106,7 @@ func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
-	var role Role
-	r, json, err := core.BuildMapAndCheckId(w, r, &role, h.Keys, h.Indexes, h.builder.Patch)
+	r, role, json, err := hdl.BuildMapAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.Validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Patch) {

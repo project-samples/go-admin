@@ -13,7 +13,9 @@ import (
 	v10 "github.com/core-go/core/v10"
 	"github.com/core-go/search/convert"
 	q "github.com/core-go/sql"
+	"github.com/core-go/sql/query"
 	"github.com/core-go/sql/template"
+	tb "github.com/core-go/sql/template/builder"
 )
 
 type UserTransport interface {
@@ -33,11 +35,11 @@ func NewUserTransport(db *sql.DB, logError func(context.Context, string, ...map[
 	}
 	buildParam := q.GetBuild(db)
 	userType := reflect.TypeOf(User{})
-	queryUser, err := template.UseQuery("user", templates, &userType, convert.ToMap, buildParam, q.GetSort)
+	queryUser, err := tb.UseQuery[*UserFilter]("user", templates, &userType, convert.ToMap, buildParam, q.GetSort)
 	if err != nil {
 		return nil, err
 	}
-	userSearchBuilder, err := q.NewSearchBuilder(db, userType, queryUser)
+	userSearchBuilder, err := query.NewSearchBuilder[User, *UserFilter](db, queryUser)
 	if err != nil {
 		return nil, err
 	}

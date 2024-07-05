@@ -159,16 +159,20 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 
-	currencyHandler, err := c.NewCurrencyTransport(db, logError, cfg.Action)
+	currencyHandler, err := c.NewCurrencyTransport(db, logError, writeLog, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	localeHandler, err := loc.NewLocaleTransport(db, logError, cfg.Action)
+	localeHandler, err := loc.NewLocaleTransport(db, logError, nil)
 	if err != nil {
 		return nil, err
 	}
-	countryHandler, err := country.NewCountryTransport(db, logError, cfg.Action)
+
+	countryHandler, err := country.NewCountryTransport(db, logError, writeLog, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	reportDB, er8 := q.Open(cfg.AuditLog.DB)
 	if er8 != nil {

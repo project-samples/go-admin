@@ -2,7 +2,7 @@ package currency
 
 import "context"
 
-type CurrencyService interface {
+type CurrencyRepository interface {
 	Load(ctx context.Context, id string) (*Currency, error)
 	Create(ctx context.Context, currency *Currency) (int64, error)
 	Update(ctx context.Context, currency *Currency) (int64, error)
