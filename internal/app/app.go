@@ -164,7 +164,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		return nil, err
 	}
 
-	localeHandler, err := loc.NewLocaleTransport(db, logError, nil)
+	localeHandler, err := loc.NewLocaleTransport(db, logError, writeLog, nil)
 	if err != nil {
 		return nil, err
 	}

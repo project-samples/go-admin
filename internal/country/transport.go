@@ -1,7 +1,6 @@
 package country
 
 import (
-	"context"
 	"database/sql"
 	"github.com/core-go/core"
 	sv "github.com/core-go/core/sql"
@@ -20,7 +19,7 @@ type CountryTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewCountryTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), writeLog core.WriteLog, action *core.ActionConf) (CountryTransport, error) {
+func NewCountryTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConf) (CountryTransport, error) {
 	validator, err := val.NewValidator[*Country]()
 	if err != nil {
 		return nil, err

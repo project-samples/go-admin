@@ -1,7 +1,6 @@
 package currency
 
 import (
-	"context"
 	"database/sql"
 	"github.com/core-go/core"
 	sv "github.com/core-go/core/sql"
@@ -20,7 +19,7 @@ type CurrencyTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewCurrencyTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), writeLog core.WriteLog, action *core.ActionConf) (CurrencyTransport, error) {
+func NewCurrencyTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConf) (CurrencyTransport, error) {
 	validator, err := val.NewValidator[*Currency]()
 	if err != nil {
 		return nil, err

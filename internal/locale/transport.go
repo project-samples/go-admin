@@ -1,7 +1,6 @@
 package locale
 
 import (
-	"context"
 	"database/sql"
 	"github.com/core-go/core"
 	sv "github.com/core-go/core/sql"
@@ -20,7 +19,7 @@ type LocaleTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewLocaleTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), action *core.ActionConfig) (LocaleTransport, error) {
+func NewLocaleTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConf) (LocaleTransport, error) {
 	validator, err := val.NewValidator[*Locale]()
 	if err != nil {
 		return nil, err
@@ -35,6 +34,6 @@ func NewLocaleTransport(db *sql.DB, logError func(context.Context, string, ...ma
 		return nil, err
 	}
 	localeService := sv.NewService[Locale, string](db, localeRepository)
-	localeHandler := NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, action)
+	localeHandler := NewLocaleHandler(localeSearchBuilder.Search, localeService, logError, validator.Validate, writeLog, action)
 	return localeHandler, nil
 }

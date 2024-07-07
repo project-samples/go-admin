@@ -7,7 +7,7 @@ require (
 	github.com/core-go/core v0.6.8
 	github.com/core-go/log v1.0.5
 	github.com/core-go/search v1.0.8
-	github.com/core-go/sql v0.5.14
+	github.com/core-go/sql v0.5.15
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
