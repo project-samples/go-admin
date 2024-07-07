@@ -4,9 +4,9 @@ go 1.22
 
 require (
 	github.com/core-go/auth v0.3.4
-	github.com/core-go/core v0.6.7
+	github.com/core-go/core v0.6.8
 	github.com/core-go/log v1.0.5
-	github.com/core-go/search v1.0.5
+	github.com/core-go/search v1.0.8
 	github.com/core-go/sql v0.5.14
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1

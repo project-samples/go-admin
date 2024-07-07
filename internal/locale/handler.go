@@ -4,13 +4,11 @@ import (
 	"context"
 	sv "github.com/core-go/core"
 	. "github.com/core-go/core/handler"
-	"github.com/core-go/core/handler/builder"
 	search "github.com/core-go/search/handler"
 )
 
 func NewLocaleHandler(find func(context.Context, *LocaleFilter, int64, int64) ([]Locale, int64, error), service LocaleService, logError sv.Log, validate func(context.Context, *Locale) ([]sv.ErrorMessage, error), action *sv.ActionConfig) LocaleTransport {
-	builder := builder.NewBuilder[Locale](nil, "CreatedBy", "CreatedAt", "UpdatedBy", "UpdatedAt")
-	hdl := Newhandler[Locale, string](service, logError, validate, builder)
+	hdl := Newhandler[Locale, string](service, logError, validate)
 	searchHandler := search.NewSearchHandler[Locale, *LocaleFilter](find, logError, nil)
 	return &LocaleHandler{Handler: hdl, SearchHandler: searchHandler}
 }
