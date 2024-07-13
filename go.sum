@@ -4,8 +4,8 @@ github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa h1:LHTHcTQiSGT7V
 github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa/go.mod h1:cEWa1LVoE5KvSD9ONXsZrj0z6KqySlCCNKHlLzbqAt4=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/core-go/auth v0.3.5 h1:T77Gghv06275Kjm/Zfa7SwiitNdDu8YvWXw069Q3Ugc=
-github.com/core-go/auth v0.3.5/go.mod h1:E56GGko1ap447bHGeQmZE6NsddcDfbCd7W0fChFbm6g=
+github.com/core-go/authentication v0.3.7 h1:rxEMf4gwRCIN/9XWz2/H36nw6f6/xRziq7ioBHrKF4U=
+github.com/core-go/authentication v0.3.7/go.mod h1:fIn6qbXCsfci9wkjc4Xvikrha0cQ4WE1svcadaJH4Qg=
 github.com/core-go/core v0.6.8 h1:eb+KbOV/tG+Tg5j9Auh/GkUQv1qpqPsrjgd71g9LjKY=
 github.com/core-go/core v0.6.8/go.mod h1:6clsy/zJTzOZTX14L9bMCxX20uDlJKz+eiVglBYJXLM=
 github.com/core-go/health v1.0.1 h1:S1evXbt9ll1Kn0ZjEJqYFpAH7lnijpfakg0bOoQ3AnI=

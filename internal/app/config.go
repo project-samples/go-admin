@@ -3,8 +3,8 @@ package app
 import (
 	"time"
 
-	"github.com/core-go/auth/ldap"
-	q "github.com/core-go/auth/sql"
+	"github.com/core-go/authentication/ldap"
+	q "github.com/core-go/authentication/sql"
 	"github.com/core-go/core"
 	"github.com/core-go/core/audit"
 	"github.com/core-go/core/builder"

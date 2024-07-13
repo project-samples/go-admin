@@ -2,10 +2,10 @@ package app
 
 import (
 	"context"
-	"github.com/core-go/auth"
-	ah "github.com/core-go/auth/handler"
-	"github.com/core-go/auth/mock"
-	as "github.com/core-go/auth/sql"
+	auth "github.com/core-go/authentication"
+	ah "github.com/core-go/authentication/handler"
+	"github.com/core-go/authentication/mock"
+	as "github.com/core-go/authentication/sql"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/jwt"
