@@ -8,16 +8,16 @@ import (
 	as "github.com/core-go/auth/sql"
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
-	"github.com/core-go/core/cookies"
-	"github.com/core-go/core/health"
 	"github.com/core-go/core/jwt"
 	redis "github.com/core-go/core/redis/v8"
-	sec "github.com/core-go/core/security"
-	ss "github.com/core-go/core/security/sql"
 	se "github.com/core-go/core/settings"
 	"github.com/core-go/core/shortid"
 	ur "github.com/core-go/core/user"
+	"github.com/core-go/health"
 	log "github.com/core-go/log/zap"
+	sec "github.com/core-go/security"
+	"github.com/core-go/security/cookies"
+	ss "github.com/core-go/security/sql"
 	q "github.com/core-go/sql"
 	sa "github.com/core-go/sql/action"
 	"github.com/core-go/sql/template"
@@ -95,7 +95,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	userId := cfg.Tracking.User
 	tokenPort := jwt.NewTokenAdapter()
 	authorizationHandler := authorization.NewHandler(tokenPort.GetAndVerifyToken, cfg.Auth.Token.Secret)
-	authorizationChecker := sec.NewDefaultAuthorizationChecker(tokenPort.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
+	authorizationChecker := sec.NewAuthorizationChecker(tokenPort.GetAndVerifyToken, cfg.Auth.Token.Secret, userId)
 	authorizer := sec.NewAuthorizer(sqlPrivilegeLoader.Privilege, true, userId)
 
 	authStatus := auth.InitStatus(cfg.Auth.Status)
