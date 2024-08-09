@@ -7,10 +7,11 @@ import (
 	q "github.com/core-go/authentication/sql"
 	"github.com/core-go/core"
 	"github.com/core-go/core/audit"
-	"github.com/core-go/core/builder"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/cors"
+	"github.com/core-go/core/handler/builder"
 	redis "github.com/core-go/core/redis/v8"
+	"github.com/core-go/core/server"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/sql"
@@ -18,7 +19,7 @@ import (
 )
 
 type Config struct {
-	Server       core.ServerConf        `mapstructure:"server"`
+	Server       server.ServerConfig    `mapstructure:"server"`
 	Allow        cors.AllowConfig       `mapstructure:"allow"`
 	SecuritySkip bool                   `mapstructure:"security_skip"`
 	Template     bool                   `mapstructure:"template"`

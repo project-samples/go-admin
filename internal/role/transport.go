@@ -1,15 +1,14 @@
 package role
 
 import (
-	"context"
 	"database/sql"
+	"net/http"
 	"reflect"
 
 	"github.com/core-go/core"
-	"github.com/core-go/core/builder"
-	"github.com/core-go/core/shortid"
+	"github.com/core-go/core/handler/builder"
 	"github.com/core-go/core/unique"
-	v10 "github.com/core-go/core/v10"
+	v "github.com/core-go/core/validator"
 	"github.com/core-go/search/convert"
 	q "github.com/core-go/sql"
 	"github.com/core-go/sql/query"
@@ -17,8 +16,18 @@ import (
 	tb "github.com/core-go/sql/template/builder"
 )
 
-func NewRoleTransport(db *sql.DB, checkDelete string, logError func(context.Context, string, ...map[string]interface{}), templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog func(context.Context, string, string, bool, string) error, action *core.ActionConfig) (RoleTransport, error) {
-	validator, err := v10.NewValidator()
+type RoleTransport interface {
+	Search(w http.ResponseWriter, r *http.Request)
+	Load(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Patch(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	AssignRole(w http.ResponseWriter, r *http.Request)
+}
+
+func NewRoleTransport(db *sql.DB, checkDelete string, logError core.Log, templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog core.WriteLog, action *core.ActionConfig) (RoleTransport, error) {
+	validator, err := v.NewValidator[*Role]()
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +42,15 @@ func NewRoleTransport(db *sql.DB, checkDelete string, logError func(context.Cont
 		return nil, err
 	}
 	// roleValidator := user.NewRoleValidator(db, conf.Sql.Role.Duplicate, validator.validateFileName)
-	roleValidator := unique.NewUniqueFieldValidator(db, "roles", "rolename", reflect.TypeOf(Role{}), validator.Validate)
+	roleValidator, err := unique.NewUniqueFieldValidator[*Role](db, "roles", "rolename", validator.Validate)
+	if err != nil {
+		return nil, err
+	}
 	roleRepository, er6 := NewRoleAdapter(db, checkDelete) // cfg.Sql.Role.Check)
 	if er6 != nil {
 		return nil, er6
 	}
 	roleService := NewRoleService(roleRepository)
-	roleHandler := NewRoleHandler(roleSearchBuilder.Search, roleService, shortid.Generate, roleValidator.Validate, logError, writeLog, action)
+	roleHandler := NewRoleHandler(roleSearchBuilder.Search, roleService, logError, roleValidator.Validate, tracking, writeLog, action)
 	return roleHandler, nil
 }

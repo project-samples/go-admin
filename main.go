@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	sv "github.com/core-go/core"
 	"github.com/core-go/core/config"
 	"github.com/core-go/core/cors"
+	svr "github.com/core-go/core/server"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/strings"
 	"github.com/core-go/log/zap"
@@ -40,8 +40,8 @@ func main() {
 	}
 	c := cors.New(cfg.Allow)
 	handler := c.Handler(r)
-	fmt.Println(sv.ServerInfo(cfg.Server))
-	sv.StartServer(cfg.Server, handler)
+	fmt.Println(svr.ServerInfo(cfg.Server))
+	svr.StartServer(cfg.Server, handler)
 }
 
 func MaskLog(name, s string) string {

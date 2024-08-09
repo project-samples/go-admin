@@ -1,76 +1,130 @@
 package user
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 
 	"github.com/core-go/core"
-	b "github.com/core-go/core/builder"
+	hdl "github.com/core-go/core/handler"
+	b "github.com/core-go/core/handler/builder"
+	v "github.com/core-go/core/validator"
 	search "github.com/core-go/search/handler"
 )
 
 func NewUserHandler(
-	find func(context.Context, *UserFilter, int64, int64) ([]User, int64, error),
+	find search.Search[User, *UserFilter],
 	userService UserService,
-	generateId core.Generate,
-	validate core.Validate,
 	logError core.Log,
+	validate v.Validate[*User],
+	tracking b.TrackingConfig,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
-	tracking b.TrackingConfig,
 ) *UserHandler {
 	userType := reflect.TypeOf(User{})
-	builder := b.NewBuilderWithIdAndConfig(generateId, userType, tracking)
-	patchHandler, params := core.CreatePatchAndParams(userType, logError, userService.Patch, validate, builder.Patch, action, writeLog)
-	searchHandler := search.NewSearchHandler(find, logError, nil)
-	return &UserHandler{service: userService, builder: builder, PatchHandler: patchHandler, SearchHandler: searchHandler, Params: params}
+	builder := b.NewBuilderByConfig[User](nil, tracking)
+	params := core.CreateParams(userType, logError, action, writeLog)
+	searchHandler := search.NewSearchHandler[User, *UserFilter](find, logError, nil)
+	return &UserHandler{SearchHandler: searchHandler, service: userService, validate: validate, builder: builder, Params: params}
 }
 
 type UserHandler struct {
-	service UserService
-	builder core.Builder
-	*core.PatchHandler
+	service UserRepository
 	*search.SearchHandler[User, *UserFilter]
 	*core.Params
+	validate v.Validate[*User]
+	builder  hdl.Builder[User]
 }
 
 func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
 	id := core.GetRequiredParam(w, r)
 	if len(id) > 0 {
-		res, err := h.service.Load(r.Context(), id)
+		user, err := h.service.Load(r.Context(), id)
 		if err != nil {
 			h.Error(r.Context(), err.Error())
 			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
 			return
 		}
-		if res == nil {
-			core.JSON(w, http.StatusNotFound, res)
+		if user == nil {
+			core.JSON(w, http.StatusNotFound, user)
 		} else {
-			core.JSON(w, http.StatusOK, res)
+			core.JSON(w, http.StatusOK, user)
 		}
 	}
 }
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var user User
-	er1 := core.Decode(w, r, &user, h.builder.Create)
+	er1 := hdl.Decode(w, r, &user, h.builder.Create)
 	if er1 == nil {
-		errors, er2 := h.Validate(r.Context(), &user)
+		errors, er2 := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
 			res, er3 := h.service.Create(r.Context(), &user)
-			core.AfterCreated(w, r, &user, res, er3, h.Error, h.Log, h.Resource, h.Action.Create)
+			if er3 != nil {
+				h.Error(r.Context(), er3.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, er3.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+				return
+			}
+
+			if res > 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("delete '%s'", user.UserId))
+				core.JSON(w, http.StatusCreated, user)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("conflict '%s'", user.UserId))
+				core.JSON(w, http.StatusConflict, res)
+			}
 		}
 	}
 }
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var user User
-	err := core.DecodeAndCheckId(w, r, &user, h.Keys, h.Indexes, h.builder.Update)
+	user, err := hdl.DecodeAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
-		errors, err := h.Validate(r.Context(), &user)
+		errors, err := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
 			res, err := h.service.Update(r.Context(), &user)
-			core.HandleResult(w, r, &user, res, err, h.Error, h.Log, h.Resource, h.Action.Update)
+			if err != nil {
+				h.Error(r.Context(), err.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, err.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+				return
+			}
+
+			if res > 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("%s '%s'", h.Action.Update, user.UserId))
+				core.JSON(w, http.StatusOK, user)
+			} else if res == 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("not found '%s'", user.UserId))
+				core.JSON(w, http.StatusNotFound, res)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("conflict '%s'", user.UserId))
+				core.JSON(w, http.StatusConflict, res)
+			}
+		}
+	}
+}
+func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
+	r, user, jsonUser, err := hdl.BuildMapAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
+	if err == nil {
+		errors, err := h.validate(r.Context(), &user)
+		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Patch) {
+			res, err := h.service.Patch(r.Context(), jsonUser)
+			if err != nil {
+				h.Error(r.Context(), err.Error())
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, err.Error())
+				http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+				return
+			}
+
+			if res > 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, true, fmt.Sprintf("%s '%s'", h.Action.Patch, user.UserId))
+				core.JSON(w, http.StatusOK, jsonUser)
+			} else if res == 0 {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, fmt.Sprintf("not found '%s'", user.UserId))
+				core.JSON(w, http.StatusNotFound, res)
+			} else {
+				h.Log(r.Context(), h.Resource, h.Action.Patch, false, fmt.Sprintf("conflict '%s'", user.UserId))
+				core.JSON(w, http.StatusConflict, res)
+			}
 		}
 	}
 }
@@ -82,15 +136,18 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			h.Error(r.Context(), err.Error())
 			h.Log(r.Context(), h.Resource, h.Action.Delete, false, err.Error())
 			http.Error(w, core.InternalServerError, http.StatusInternalServerError)
+			return
+		}
+
+		if res > 0 {
+			h.Log(r.Context(), h.Resource, h.Action.Delete, true, fmt.Sprintf("%s '%s'", h.Action.Delete, id))
+			core.JSON(w, http.StatusOK, res)
 		} else if res == 0 {
 			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("not found '%s'", id))
 			core.JSON(w, http.StatusNotFound, res)
-		} else if res < 0 {
+		} else {
 			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("conflict '%s'", id))
 			core.JSON(w, http.StatusConflict, res)
-		} else {
-			h.Log(r.Context(), h.Resource, h.Action.Delete, true, fmt.Sprintf("delete '%s'", id))
-			core.JSON(w, http.StatusOK, res)
 		}
 	}
 }

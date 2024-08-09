@@ -1,16 +1,14 @@
 package user
 
 import (
-	"context"
 	"database/sql"
+	"github.com/core-go/core/unique"
 	"net/http"
 	"reflect"
 
 	"github.com/core-go/core"
-	"github.com/core-go/core/builder"
-	"github.com/core-go/core/shortid"
-	"github.com/core-go/core/unique"
-	v10 "github.com/core-go/core/v10"
+	"github.com/core-go/core/handler/builder"
+	v "github.com/core-go/core/validator"
 	"github.com/core-go/search/convert"
 	q "github.com/core-go/sql"
 	"github.com/core-go/sql/query"
@@ -28,8 +26,8 @@ type UserTransport interface {
 	GetUserByRole(w http.ResponseWriter, r *http.Request)
 }
 
-func NewUserTransport(db *sql.DB, logError func(context.Context, string, ...map[string]interface{}), templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog func(context.Context, string, string, bool, string) error, action *core.ActionConfig) (UserTransport, error) {
-	validator, err := v10.NewValidator()
+func NewUserTransport(db *sql.DB, logError core.Log, templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog core.WriteLog, action *core.ActionConfig) (UserTransport, error) {
+	validator, err := v.NewValidator[*User]()
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +42,15 @@ func NewUserTransport(db *sql.DB, logError func(context.Context, string, ...map[
 		return nil, err
 	}
 	// userValidator := user.NewUserValidator(db, conf.Sql.User, validator.validateFileName)
-	userValidator := unique.NewUniqueFieldValidator(db, "users", "username", reflect.TypeOf(User{}), validator.Validate)
+	userValidator, err := unique.NewUniqueFieldValidator[*User](db, "users", "username", validator.Validate)
+	if err != nil {
+		return nil, err
+	}
 	userRepository, er7 := NewUserAdapter(db)
 	if er7 != nil {
 		return nil, er7
 	}
 	userService := NewUserService(userRepository)
-	userHandler := NewUserHandler(userSearchBuilder.Search, userService, shortid.Generate, userValidator.Validate, logError, writeLog, action, tracking)
+	userHandler := NewUserHandler(userSearchBuilder.Search, userService, logError, userValidator.Validate, tracking, writeLog, action)
 	return userHandler, nil
 }
