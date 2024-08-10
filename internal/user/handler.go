@@ -53,8 +53,7 @@ func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var user User
-	er1 := hdl.Decode(w, r, &user, h.builder.Create)
+	user, er1 := hdl.Decode(w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {

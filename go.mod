@@ -4,9 +4,9 @@ go 1.22
 
 require (
 	github.com/core-go/authentication v0.3.7
-	github.com/core-go/core v0.7.0
+	github.com/core-go/core v0.7.1
 	github.com/core-go/health v1.0.3
-	github.com/core-go/log v1.0.5
+	github.com/core-go/log v1.0.7
 	github.com/core-go/search v1.0.9
 	github.com/core-go/security v0.1.3
 	github.com/core-go/sql v0.5.15

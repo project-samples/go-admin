@@ -53,8 +53,7 @@ func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var role Role
-	er1 := hdl.Decode(w, r, &role, h.builder.Create)
+	role, er1 := hdl.Decode(w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
