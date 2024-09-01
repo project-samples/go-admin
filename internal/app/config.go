@@ -10,10 +10,10 @@ import (
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/cors"
 	"github.com/core-go/core/handler/builder"
-	redis "github.com/core-go/core/redis/v8"
 	"github.com/core-go/core/server"
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
+	"github.com/core-go/redis/v9"
 	"github.com/core-go/sql"
 	sa "github.com/core-go/sql/action"
 )

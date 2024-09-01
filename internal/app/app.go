@@ -9,12 +9,12 @@ import (
 	"github.com/core-go/core/authorization"
 	"github.com/core-go/core/code"
 	"github.com/core-go/core/jwt"
-	redis "github.com/core-go/core/redis/v8"
 	se "github.com/core-go/core/settings"
 	"github.com/core-go/core/shortid"
 	ur "github.com/core-go/core/user"
 	"github.com/core-go/health"
 	log "github.com/core-go/log/zap"
+	"github.com/core-go/redis/v9"
 	sec "github.com/core-go/security"
 	"github.com/core-go/security/cookies"
 	ss "github.com/core-go/security/sql"
@@ -59,20 +59,22 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		return nil, er0
 	}
 	if err := db.Ping(); err != nil {
-		return nil, er0
+		return nil, err
 	}
 	sqlHealthChecker := q.NewHealthChecker(db)
 	var healthHandler *health.Handler
 	cachePort, err := redis.NewRedisAdapterByConfig(cfg.Redis)
-	if err != nil {
-		return nil, err
-	}
-	{
-		err := cachePort.Client.Ping(ctx).Err()
+	/*
 		if err != nil {
 			return nil, err
 		}
-	}
+		{
+			err := cachePort.Pool.Ping(ctx).Err()
+			if err != nil {
+				return nil, err
+			}
+		}*/
+	redisChecker := redis.NewHealthChecker(cachePort.Client)
 	logError := log.LogError
 	generateId := shortid.Generate
 	var writeLog func(ctx context.Context, resource string, action string, success bool, desc string) error
@@ -85,9 +87,9 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 		logWriter := sa.NewActionLogWriter(auditLogDB, "auditlog", cfg.AuditLog.Config, cfg.AuditLog.Schema, generateId)
 		writeLog = logWriter.Write
 		auditLogHealthChecker := q.NewSqlHealthChecker(auditLogDB, "audit_log")
-		healthHandler = health.NewHandler(sqlHealthChecker, auditLogHealthChecker)
+		healthHandler = health.NewHandler(sqlHealthChecker, auditLogHealthChecker, redisChecker)
 	} else {
-		healthHandler = health.NewHandler(sqlHealthChecker)
+		healthHandler = health.NewHandler(sqlHealthChecker, redisChecker)
 	}
 
 	sqlPrivilegeLoader := ss.NewPrivilegeLoader(db, cfg.Sql.PermissionsByUser)

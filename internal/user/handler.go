@@ -56,7 +56,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	user, er1 := hdl.Decode(w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &user)
-		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
+		if !core.HasError(w, r, errors, er2, h.Error, &user, h.Log, h.Resource, h.Action.Create) {
 			res, er3 := h.service.Create(r.Context(), &user)
 			if er3 != nil {
 				h.Error(r.Context(), er3.Error())
@@ -79,7 +79,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	user, err := hdl.DecodeAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &user)
-		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
+		if !core.HasError(w, r, errors, err, h.Error, &user, h.Log, h.Resource, h.Action.Update) {
 			res, err := h.service.Update(r.Context(), &user)
 			if err != nil {
 				h.Error(r.Context(), err.Error())
@@ -105,7 +105,7 @@ func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	r, user, jsonUser, err := hdl.BuildMapAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &user)
-		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Patch) {
+		if !core.HasError(w, r, errors, err, h.Error, jsonUser, h.Log, h.Resource, h.Action.Patch) {
 			res, err := h.service.Patch(r.Context(), jsonUser)
 			if err != nil {
 				h.Error(r.Context(), err.Error())

@@ -56,7 +56,7 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	role, er1 := hdl.Decode(w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &role)
-		if !core.HasError(w, r, errors, er2, h.Error, h.Log, h.Resource, h.Action.Create) {
+		if !core.HasError(w, r, errors, er2, h.Error, &role, h.Log, h.Resource, h.Action.Create) {
 			res, er3 := h.service.Create(r.Context(), &role)
 			if er3 != nil {
 				h.Error(r.Context(), er3.Error())
@@ -79,7 +79,7 @@ func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	role, err := hdl.DecodeAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &role)
-		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Update) {
+		if !core.HasError(w, r, errors, err, h.Error, &role, h.Log, h.Resource, h.Action.Update) {
 			res, err := h.service.Update(r.Context(), &role)
 			if err != nil {
 				h.Error(r.Context(), err.Error())
@@ -105,7 +105,7 @@ func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	r, role, jsonRole, err := hdl.BuildMapAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &role)
-		if !core.HasError(w, r, errors, err, h.Error, h.Log, h.Resource, h.Action.Patch) {
+		if !core.HasError(w, r, errors, err, h.Error, jsonRole, h.Log, h.Resource, h.Action.Patch) {
 			res, err := h.service.Patch(r.Context(), jsonRole)
 			if err != nil {
 				h.Error(r.Context(), err.Error())
