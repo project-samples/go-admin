@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/core-go/authentication v0.3.7
 	github.com/core-go/core v1.2.1
-	github.com/core-go/health v1.0.4
+	github.com/core-go/health v1.2.0
 	github.com/core-go/log v1.0.9
 	github.com/core-go/redis v1.0.3
 	github.com/core-go/search v1.1.1
@@ -49,7 +49,7 @@ require (
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8 // indirect
 	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
