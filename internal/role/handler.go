@@ -6,9 +6,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/core"
-	hdl "github.com/core-go/core/handler"
-	b "github.com/core-go/core/handler/builder"
-	v "github.com/core-go/core/validator"
+	b "github.com/core-go/core/builder"
 	search "github.com/core-go/search/handler"
 )
 
@@ -16,29 +14,29 @@ func NewRoleHandler(
 	find search.Search[Role, *RoleFilter],
 	roleService RoleService,
 	logError core.Log,
-	validate v.Validate[*Role],
+	validate core.Validate[*Role],
 	tracking b.TrackingConfig,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
 ) *RoleHandler {
 	roleType := reflect.TypeOf(Role{})
 	builder := b.NewBuilderByConfig[Role](nil, tracking)
-	params := core.CreateParams(roleType, logError, action, writeLog)
+	params := core.CreateAttributes(roleType, logError, action, writeLog)
 	searchHandler := search.NewSearchHandler[Role, *RoleFilter](find, logError, nil)
-	return &RoleHandler{SearchHandler: searchHandler, service: roleService, validate: validate, builder: builder, Params: params}
+	return &RoleHandler{SearchHandler: searchHandler, service: roleService, validate: validate, builder: builder, Attributes: params}
 }
 
 type RoleHandler struct {
 	service RoleRepository
 	*search.SearchHandler[Role, *RoleFilter]
-	*core.Params
-	validate v.Validate[*Role]
-	builder  hdl.Builder[Role]
+	*core.Attributes
+	validate core.Validate[*Role]
+	builder  core.Builder[Role]
 }
 
 func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := core.GetRequiredParam(w, r)
-	if len(id) > 0 {
+	id, err := core.GetRequiredString(w, r)
+	if err == nil {
 		role, err := h.service.Load(r.Context(), id)
 		if err != nil {
 			h.Error(r.Context(), err.Error())
@@ -53,7 +51,7 @@ func (h *RoleHandler) Load(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
-	role, er1 := hdl.Decode(w, r, h.builder.Create)
+	role, er1 := core.Decode[Role](w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, er2, h.Error, &role, h.Log, h.Resource, h.Action.Create) {
@@ -76,7 +74,7 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
-	role, err := hdl.DecodeAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
+	role, err := core.DecodeAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, err, h.Error, &role, h.Log, h.Resource, h.Action.Update) {
@@ -102,7 +100,7 @@ func (h *RoleHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
-	r, role, jsonRole, err := hdl.BuildMapAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
+	r, role, jsonRole, err := core.BuildMapAndCheckId[Role](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &role)
 		if !core.HasError(w, r, errors, err, h.Error, jsonRole, h.Log, h.Resource, h.Action.Patch) {
@@ -128,8 +126,8 @@ func (h *RoleHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := core.GetRequiredParam(w, r)
-	if len(id) > 0 {
+	id, err := core.GetRequiredString(w, r)
+	if err == nil {
 		res, err := h.service.Delete(r.Context(), id)
 		if err != nil {
 			h.Error(r.Context(), err.Error())
@@ -151,10 +149,9 @@ func (h *RoleHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *RoleHandler) AssignRole(w http.ResponseWriter, r *http.Request) {
-	var users []string
-	id := core.GetRequiredParam(w, r, 1)
-	if len(id) > 0 {
-		err := core.Decode(w, r, &users)
+	id, err := core.GetRequiredString(w, r, 1)
+	if err == nil {
+		users, err := core.Decode[[]string](w, r)
 		if err == nil {
 			res, err := h.service.AssignRole(r.Context(), id, users)
 			if err != nil {

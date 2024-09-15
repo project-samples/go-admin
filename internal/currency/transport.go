@@ -19,7 +19,7 @@ type CurrencyTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewCurrencyTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConf) (CurrencyTransport, error) {
+func NewCurrencyTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConfig) (CurrencyTransport, error) {
 	validator, err := val.NewValidator[*Currency]()
 	if err != nil {
 		return nil, err

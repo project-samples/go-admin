@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/core"
-	"github.com/core-go/core/handler/builder"
+	"github.com/core-go/core/builder"
 	v "github.com/core-go/core/validator"
 	"github.com/core-go/search/convert"
 	q "github.com/core-go/sql"

@@ -9,7 +9,7 @@ import (
 )
 
 func NewAuditLogHandler(auditLogQuery AuditLogQuery, logError core.Log) *AuditLogHandler {
-	paramIndex, filterIndex := s.BuildParams(reflect.TypeOf(AuditLogFilter{}))
+	paramIndex, filterIndex := s.BuildAttributes(reflect.TypeOf(AuditLogFilter{}))
 	return &AuditLogHandler{
 		query:       auditLogQuery,
 		logError:    logError,
@@ -26,8 +26,8 @@ type AuditLogHandler struct {
 }
 
 func (h *AuditLogHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := core.GetRequiredParam(w, r)
-	if len(id) > 0 {
+	id, err := core.GetRequiredString(w, r)
+	if err == nil {
 		res, err := h.query.Load(r.Context(), id)
 		if err == nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

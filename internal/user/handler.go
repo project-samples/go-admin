@@ -6,9 +6,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/core"
-	hdl "github.com/core-go/core/handler"
-	b "github.com/core-go/core/handler/builder"
-	v "github.com/core-go/core/validator"
+	b "github.com/core-go/core/builder"
 	search "github.com/core-go/search/handler"
 )
 
@@ -16,29 +14,29 @@ func NewUserHandler(
 	find search.Search[User, *UserFilter],
 	userService UserService,
 	logError core.Log,
-	validate v.Validate[*User],
+	validate core.Validate[*User],
 	tracking b.TrackingConfig,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
 ) *UserHandler {
 	userType := reflect.TypeOf(User{})
 	builder := b.NewBuilderByConfig[User](nil, tracking)
-	params := core.CreateParams(userType, logError, action, writeLog)
+	attributes := core.CreateAttributes(userType, logError, action, writeLog)
 	searchHandler := search.NewSearchHandler[User, *UserFilter](find, logError, nil)
-	return &UserHandler{SearchHandler: searchHandler, service: userService, validate: validate, builder: builder, Params: params}
+	return &UserHandler{SearchHandler: searchHandler, service: userService, validate: validate, builder: builder, Attributes: attributes}
 }
 
 type UserHandler struct {
 	service UserRepository
 	*search.SearchHandler[User, *UserFilter]
-	*core.Params
-	validate v.Validate[*User]
-	builder  hdl.Builder[User]
+	*core.Attributes
+	validate core.Validate[*User]
+	builder  core.Builder[User]
 }
 
 func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
-	id := core.GetRequiredParam(w, r)
-	if len(id) > 0 {
+	id, err := core.GetRequiredString(w, r)
+	if err == nil {
 		user, err := h.service.Load(r.Context(), id)
 		if err != nil {
 			h.Error(r.Context(), err.Error())
@@ -53,7 +51,7 @@ func (h *UserHandler) Load(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
-	user, er1 := hdl.Decode(w, r, h.builder.Create)
+	user, er1 := core.Decode[User](w, r, h.builder.Create)
 	if er1 == nil {
 		errors, er2 := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, er2, h.Error, &user, h.Log, h.Resource, h.Action.Create) {
@@ -76,7 +74,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-	user, err := hdl.DecodeAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
+	user, err := core.DecodeAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, err, h.Error, &user, h.Log, h.Resource, h.Action.Update) {
@@ -102,7 +100,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
-	r, user, jsonUser, err := hdl.BuildMapAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
+	r, user, jsonUser, err := core.BuildMapAndCheckId[User](w, r, h.Keys, h.Indexes, h.builder.Update)
 	if err == nil {
 		errors, err := h.validate(r.Context(), &user)
 		if !core.HasError(w, r, errors, err, h.Error, jsonUser, h.Log, h.Resource, h.Action.Patch) {
@@ -128,8 +126,8 @@ func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := core.GetRequiredParam(w, r)
-	if len(id) > 0 {
+	id, err := core.GetRequiredString(w, r)
+	if err == nil {
 		res, err := h.service.Delete(r.Context(), id)
 		if err != nil {
 			h.Error(r.Context(), err.Error())

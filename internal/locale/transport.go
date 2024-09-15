@@ -19,7 +19,7 @@ type LocaleTransport interface {
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 
-func NewLocaleTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConf) (LocaleTransport, error) {
+func NewLocaleTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConfig) (LocaleTransport, error) {
 	validator, err := val.NewValidator[*Locale]()
 	if err != nil {
 		return nil, err
