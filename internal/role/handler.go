@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/core"
-	b "github.com/core-go/core/builder"
+	"github.com/core-go/core/builder"
 	search "github.com/core-go/search/handler"
 )
 
@@ -15,12 +15,12 @@ func NewRoleHandler(
 	roleService RoleService,
 	logError core.Log,
 	validate core.Validate[*Role],
-	tracking b.TrackingConfig,
+	tracking builder.TrackingConfig,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
 ) *RoleHandler {
 	roleType := reflect.TypeOf(Role{})
-	builder := b.NewBuilderByConfig[Role](nil, tracking)
+	builder := builder.NewBuilderByConfig[Role](nil, tracking)
 	params := core.CreateAttributes(roleType, logError, action, writeLog)
 	searchHandler := search.NewSearchHandler[Role, *RoleFilter](find, logError, nil)
 	return &RoleHandler{SearchHandler: searchHandler, service: roleService, validate: validate, builder: builder, Attributes: params}

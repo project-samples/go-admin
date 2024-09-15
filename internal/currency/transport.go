@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/core-go/core"
 	sv "github.com/core-go/core/sql"
-	val "github.com/core-go/core/validator"
+	v "github.com/core-go/core/validator"
 	"github.com/core-go/sql/adapter"
 	"github.com/core-go/sql/query/builder"
 	"net/http"
@@ -20,7 +20,7 @@ type CurrencyTransport interface {
 }
 
 func NewCurrencyTransport(db *sql.DB, logError core.Log, writeLog core.WriteLog, action *core.ActionConfig) (CurrencyTransport, error) {
-	validator, err := val.NewValidator[*Currency]()
+	validator, err := v.NewValidator[*Currency]()
 	if err != nil {
 		return nil, err
 	}

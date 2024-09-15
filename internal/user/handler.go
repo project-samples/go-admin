@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/core-go/core"
-	b "github.com/core-go/core/builder"
+	"github.com/core-go/core/builder"
 	search "github.com/core-go/search/handler"
 )
 
@@ -15,12 +15,12 @@ func NewUserHandler(
 	userService UserService,
 	logError core.Log,
 	validate core.Validate[*User],
-	tracking b.TrackingConfig,
+	tracking builder.TrackingConfig,
 	writeLog core.WriteLog,
 	action *core.ActionConfig,
 ) *UserHandler {
 	userType := reflect.TypeOf(User{})
-	builder := b.NewBuilderByConfig[User](nil, tracking)
+	builder := builder.NewBuilderByConfig[User](nil, tracking)
 	attributes := core.CreateAttributes(userType, logError, action, writeLog)
 	searchHandler := search.NewSearchHandler[User, *UserFilter](find, logError, nil)
 	return &UserHandler{SearchHandler: searchHandler, service: userService, validate: validate, builder: builder, Attributes: attributes}

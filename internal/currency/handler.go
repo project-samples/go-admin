@@ -1,18 +1,17 @@
 package currency
 
 import (
-	"context"
-	sv "github.com/core-go/core"
+	"github.com/core-go/core"
 	s "github.com/core-go/search/handler"
 )
 
-func NewCurrencyHandler(find func(context.Context, *CurrencyFilter, int64, int64) ([]Currency, int64, error), service CurrencyService, logError sv.Log, validate func(context.Context, *Currency) ([]sv.ErrorMessage, error), writeLog sv.WriteLog, action *sv.ActionConfig) CurrencyTransport {
-	hdl := sv.NewhandlerWithLog[Currency, string](service, logError, validate, action, writeLog)
-	searchHandler := s.NewSearchHandler[Currency, *CurrencyFilter](find, logError, nil)
-	return &CurrencyHandler{Handler: hdl, SearchHandler: searchHandler}
+func NewCurrencyHandler(search s.Search[Currency, *CurrencyFilter], service CurrencyService, logError core.Log, validate core.Validate[*Currency], writeLog core.WriteLog, action *core.ActionConfig) CurrencyTransport {
+	handler := core.NewhandlerWithLog[Currency, string](service, logError, validate, action, writeLog)
+	searchHandler := s.NewSearchHandler[Currency, *CurrencyFilter](search, logError, nil)
+	return &CurrencyHandler{Handler: handler, SearchHandler: searchHandler}
 }
 
 type CurrencyHandler struct {
-	*sv.Handler[Currency, string]
+	*core.Handler[Currency, string]
 	*s.SearchHandler[Currency, *CurrencyFilter]
 }
