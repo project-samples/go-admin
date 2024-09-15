@@ -64,7 +64,7 @@ func (h *RoleHandler) Create(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if res > 0 {
-				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("delete '%s'", role.RoleId))
+				h.Log(r.Context(), h.Resource, h.Action.Update, true, fmt.Sprintf("create '%s'", role.RoleId))
 				core.JSON(w, http.StatusCreated, role)
 			} else {
 				h.Log(r.Context(), h.Resource, h.Action.Update, false, fmt.Sprintf("conflict '%s'", role.RoleId))
