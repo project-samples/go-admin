@@ -3,6 +3,7 @@ package role
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -165,29 +166,41 @@ func buildUpdateStatements(role *Role, driver string, buildParam func(int) strin
 }
 
 func (s *RoleAdapter) Patch(ctx context.Context, obj map[string]interface{}) (int64, error) {
-	sts, err := s.buildPatchRoleStatements(obj)
+	roleId, ok := obj["roleId"]
+	if !ok {
+		return -1, errors.New("roleId must be in payload")
+	}
+	sroleId, ok2 := roleId.(string)
+	if !ok2 {
+		return -1, errors.New("roleId must be a string")
+	}
+	sts, err := s.buildPatchRoleStatements(sroleId, obj)
 	if err != nil {
 		return 0, err
 	}
 	return sts.Exec(ctx, s.db)
 }
-func (s *RoleAdapter) buildPatchRoleStatements(json map[string]interface{}) (q.Statements, error) {
+func (s *RoleAdapter) buildPatchRoleStatements(roleId string, json map[string]interface{}) (q.Statements, error) {
 	sts := q.NewStatements(true)
 
 	columnMap := q.JSONToColumns(json, s.jsonColumnMap)
 	sts.Add(q.BuildToPatch("roles", columnMap, s.keys, s.BuildParam))
 
-	deleteModules := fmt.Sprintf("delete from rolemodules where roleId = '%s';", json["roleId"])
-	sts.Add(deleteModules, nil)
+	deleteModules := fmt.Sprintf("delete from rolemodules where roleId = %s", s.BuildParam(1))
+	sts.Add(deleteModules, []interface{}{roleId})
 
 	a, ok := json["privileges"]
 	if ok {
 		t, _ := a.([]string)
-		for i := 0; i < len(t); i++ {
-			splitPermission := strings.Fields(t[i])
-			insertModules := fmt.Sprintf("insert into rolemodules values (%s,%s,%s);", s.BuildParam(1), s.BuildParam(2), s.BuildParam(3))
-			sts.Add(insertModules, []interface{}{json["roleId"], splitPermission[0], splitPermission[1]})
+		modules, err := buildModules(roleId, t)
+		if err != nil {
+			return nil, err
 		}
+		query, args, er2 := q.BuildToInsertBatch("roleModules", modules, s.Driver, s.ModuleSchema)
+		if er2 != nil {
+			return nil, er2
+		}
+		sts.Add(query, args)
 	}
 	return sts, nil
 }
