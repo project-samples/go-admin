@@ -165,44 +165,45 @@ func buildUpdateStatements(role *Role, driver string, buildParam func(int) strin
 	return sts, nil
 }
 
-func (s *RoleAdapter) Patch(ctx context.Context, obj map[string]interface{}) (int64, error) {
-	roleId, ok := obj["roleId"]
+func (s *RoleAdapter) Patch(ctx context.Context, role map[string]interface{}) (int64, error) {
+	objId, ok := role["roleId"]
 	if !ok {
 		return -1, errors.New("roleId must be in payload")
 	}
-	sroleId, ok2 := roleId.(string)
+	roleId, ok2 := objId.(string)
 	if !ok2 {
 		return -1, errors.New("roleId must be a string")
 	}
-	sts, err := s.buildPatchRoleStatements(sroleId, obj)
-	if err != nil {
-		return 0, err
+	var privileges []string
+	var ok4 bool
+	objPrivileges, ok3 := role["privileges"]
+	if ok3 {
+		privileges, ok4 = objPrivileges.([]string)
 	}
-	return sts.Exec(ctx, s.db)
-}
-func (s *RoleAdapter) buildPatchRoleStatements(roleId string, json map[string]interface{}) (q.Statements, error) {
-	sts := q.NewStatements(true)
-
-	columnMap := q.JSONToColumns(json, s.jsonColumnMap)
-	sts.Add(q.BuildToPatch("roles", columnMap, s.keys, s.BuildParam))
+	var sts q.Statements
+	if ok4 && len(role) > 2 || !ok4 && len(role) > 1 {
+		sts = q.NewStatements(true)
+		columnMap := q.JSONToColumns(role, s.jsonColumnMap)
+		sts.Add(q.BuildToPatch("roles", columnMap, s.keys, s.BuildParam))
+	} else {
+		sts = q.NewStatements(false)
+	}
 
 	deleteModules := fmt.Sprintf("delete from rolemodules where roleId = %s", s.BuildParam(1))
 	sts.Add(deleteModules, []interface{}{roleId})
 
-	a, ok := json["privileges"]
-	if ok {
-		t, _ := a.([]string)
-		modules, err := buildModules(roleId, t)
+	if ok4 {
+		modules, err := buildModules(roleId, privileges)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 		query, args, er2 := q.BuildToInsertBatch("roleModules", modules, s.Driver, s.ModuleSchema)
 		if er2 != nil {
-			return nil, er2
+			return -1, er2
 		}
 		sts.Add(query, args)
 	}
-	return sts, nil
+	return sts.Exec(ctx, s.db)
 }
 
 func (s *RoleAdapter) Delete(ctx context.Context, id string) (int64, error) {
