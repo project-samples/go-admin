@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/core-go/core/config"
 	"github.com/core-go/core/cors"
 	svr "github.com/core-go/core/server"
@@ -11,7 +13,6 @@ import (
 	"github.com/core-go/log/zap"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"net/http"
 
 	"go-service/internal/app"
 )

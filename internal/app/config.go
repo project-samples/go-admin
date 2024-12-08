@@ -14,7 +14,6 @@ import (
 	mid "github.com/core-go/log/middleware"
 	"github.com/core-go/log/zap"
 	"github.com/core-go/redis/v9"
-	"github.com/core-go/sql"
 	sa "github.com/core-go/sql/action"
 )
 
@@ -25,7 +24,7 @@ type Config struct {
 	Template     bool                   `mapstructure:"template"`
 	Ldap         ldap.LDAPConfig        `mapstructure:"ldap"`
 	Auth         q.SqlAuthConfig        `mapstructure:"auth"`
-	DB           sql.Config             `mapstructure:"db"`
+	DB           DBConfig               `mapstructure:"db"`
 	Log          log.Config             `mapstructure:"log"`
 	MiddleWare   mid.LogConfig          `mapstructure:"middleware"`
 	AutoRoleId   *bool                  `mapstructure:"auto_role_id"`
@@ -53,4 +52,8 @@ type SessionConfig struct {
 	Secret      string        `yaml:"secret" mapstructure:"secret"`
 	ExpiredTime time.Duration `mapstructure:"expired_time"`
 	Host        string        `mapstructure:"host"`
+}
+type DBConfig struct {
+	DataSourceName string `yaml:"data_source_name" mapstructure:"data_source_name" json:"dataSourceName,omitempty" gorm:"column:datasourcename" bson:"dataSourceName,omitempty" dynamodbav:"dataSourceName,omitempty" firestore:"dataSourceName,omitempty"`
+	Driver         string `yaml:"driver" mapstructure:"driver" json:"driver,omitempty" gorm:"column:driver" bson:"driver,omitempty" dynamodbav:"driver,omitempty" firestore:"driver,omitempty"`
 }
