@@ -51,7 +51,7 @@
 
   <select id="audit_log">
     select ${fields}
-    from auditlog
+    from audit_logs
     where
     <if test="time.min != null">
       time >= #{time.min} and

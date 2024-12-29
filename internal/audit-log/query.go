@@ -46,7 +46,7 @@ func NewAuditLogQuery(db *sql.DB, templates map[string]*template.Template, getUs
 
 func (s *SqlAuditLogQuery) Load(ctx context.Context, id string) (*AuditLog, error) {
 	var rows []AuditLog
-	query := fmt.Sprintf("select %s from auditlog where id = %s limit 1", s.Fields, s.buildParam(1))
+	query := fmt.Sprintf("select %s from audit_logs where id = %s limit 1", s.Fields, s.buildParam(1))
 	err := q.Query(ctx, s.db, s.Map, &rows, query, id)
 	if len(rows) > 0 {
 		return &rows[0], err
