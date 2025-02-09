@@ -69,8 +69,8 @@ func NewRoleAdapter(db *sql.DB, checkDelete string) (*RoleAdapter, error) {
 
 func (s *RoleAdapter) Load(ctx context.Context, roleId string) (*Role, error) {
 	var roles []Role
-	sql := fmt.Sprintf("select * from roles where roleId = %s", s.BuildParam(1))
-	er1 := q.Query(ctx, s.db, s.Map, &roles, sql, roleId)
+	query1 := fmt.Sprintf("select * from roles where roleId = %s", s.BuildParam(1))
+	er1 := q.Query(ctx, s.db, s.Map, &roles, query1, roleId)
 	if er1 != nil {
 		return nil, er1
 	}
@@ -78,22 +78,12 @@ func (s *RoleAdapter) Load(ctx context.Context, roleId string) (*Role, error) {
 		return nil, nil
 	}
 	role := roles[0]
-	privileges, er3 := getPrivileges(ctx, s.db, roleId, s.BuildParam, getModules, s.ModuleMap)
+	var modules []roleModule
+	query2 := fmt.Sprintf(`select moduleId, permissions from roleModules where roleId = %s`, s.BuildParam(1))
+	er3 := q.Query(ctx, s.db, s.ModuleMap, &modules, query2, roleId)
 	if er3 != nil {
 		return nil, er3
 	}
-	role.Privileges = privileges
-	return &role, nil
-}
-func getPrivileges(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string, getModules func(context.Context, *sql.DB, string, func(int) string, map[string]int) ([]roleModule, error), m map[string]int) ([]string, error) {
-	modules, er1 := getModules(ctx, db, roleId, buildParam, m)
-	if er1 != nil {
-		return nil, er1
-	}
-	privileges := buildPrivileges(modules)
-	return privileges, nil
-}
-func buildPrivileges(modules []roleModule) []string {
 	privileges := make([]string, 0)
 	if len(modules) > 0 {
 		for _, module := range modules {
@@ -104,14 +94,8 @@ func buildPrivileges(modules []roleModule) []string {
 			privileges = append(privileges, id)
 		}
 	}
-	return privileges
-}
-func getModules(ctx context.Context, db *sql.DB, roleId string, buildParam func(int) string, m map[string]int) ([]roleModule, error) {
-	var modules []roleModule
-	p := buildParam(1)
-	query := fmt.Sprintf(`select moduleId, permissions from roleModules where roleId = %s`, p)
-	err := q.Query(ctx, db, m, &modules, query, roleId)
-	return modules, err
+	role.Privileges = privileges
+	return &role, nil
 }
 
 func (s *RoleAdapter) Create(ctx context.Context, role *Role) (int64, error) {
