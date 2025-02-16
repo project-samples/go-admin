@@ -74,7 +74,7 @@ create table audit_logs (
   status varchar(255),
   remark varchar(255)
 );
-insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('dashboard','Dashboard','A','/dashboard','dashboard','assignments',1,7,'');
+insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('dashboard','Dashboard','A','/dashboard','dashboard','assignment',1,7,'');
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('admin','Admin','A','/admin','admin','contacts',2,7,'');
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('setup','Setup','A','/setup','setup','settings',3,7,'');
 insert into modules (moduleid,modulename,status,path,resourcekey,icon,sequence,actions,parent) values ('report','Report','A','/report','report','pie_chart',4,7,'');
