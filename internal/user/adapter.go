@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -124,18 +125,36 @@ func (s *UserAdapter) Update(ctx context.Context, user *User) (int64, error) {
 }
 
 func (s *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (int64, error) {
-	sts := q.NewStatements(true)
-	columnMap := q.JSONToColumns(user, s.jsonColumnMap)
-	sts.Add(q.BuildToPatch("users", columnMap, s.keys, s.BuildParam))
-	if user["roles"] != nil {
+	objId, ok := user["userId"]
+	if !ok {
+		return -1, errors.New("userId must be in payload")
+	}
+	userId, ok2 := objId.(string)
+	if !ok2 {
+		return -1, errors.New("userId must be a string")
+	}
+	var roles []string
+	var ok4 bool
+	objPrivileges, ok3 := user["roles"]
+	if ok3 {
+		roles, ok4 = objPrivileges.([]string)
+	}
+	var sts q.Statements
+	if ok4 && len(user) > 2 || !ok4 && len(user) > 1 {
+		sts = q.NewStatements(true)
+		columnMap := q.JSONToColumns(user, s.jsonColumnMap)
+		sts.Add(q.BuildToPatch("users", columnMap, s.keys, s.BuildParam))
+	} else {
+		sts = q.NewStatements(false)
+	}
+	if ok4 {
 		deleteModules := fmt.Sprintf("delete from userRoles where userid = %s", s.BuildParam(1))
-		sts.Add(deleteModules, []interface{}{user["userId"]})
-		a := user["roles"]
-		t, ok := a.([]string)
+		sts.Add(deleteModules, []interface{}{userId})
 		if ok {
-			for i := 0; i < len(t); i++ {
-				insertModules := fmt.Sprintf("insert into userroles values (%s,%s)", s.BuildParam(1), s.BuildParam(2))
-				sts.Add(insertModules, []interface{}{user["userId"], t[i]})
+			l := len(roles)
+			for i := 0; i < l; i++ {
+				insertModules := fmt.Sprintf("insert into userRoles(userid, roleid) values (%s,%s)", s.BuildParam(1), s.BuildParam(2))
+				sts.Add(insertModules, []interface{}{userId, roles[i]})
 			}
 		}
 	}

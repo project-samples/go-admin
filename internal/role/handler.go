@@ -141,7 +141,7 @@ func (h *RoleHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			core.JSON(w, http.StatusOK, res)
 		} else if res == 0 {
 			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("not found '%s'", id))
-			core.JSON(w, http.StatusNotFound, res)
+			core.JSON(w, http.StatusGone, res)
 		} else {
 			h.Log(r.Context(), h.Resource, h.Action.Delete, false, fmt.Sprintf("conflict '%s'", id))
 			core.JSON(w, http.StatusConflict, res)

@@ -138,7 +138,6 @@ func (s *RoleAdapter) Create(ctx context.Context, role *Role) (int64, error) {
 
 	return sts.Exec(ctx, s.db)
 }
-
 func (s *RoleAdapter) Update(ctx context.Context, role *Role) (int64, error) {
 	modules, err := buildModules(role.RoleId, role.Privileges)
 	if err != nil {
@@ -159,7 +158,6 @@ func (s *RoleAdapter) Update(ctx context.Context, role *Role) (int64, error) {
 
 	return sts.Exec(ctx, s.db)
 }
-
 func (s *RoleAdapter) Patch(ctx context.Context, role map[string]interface{}) (int64, error) {
 	objId, ok := role["roleId"]
 	if !ok {
@@ -231,12 +229,11 @@ func checkExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
 }
 
 func (s *RoleAdapter) AssignRole(ctx context.Context, roleId string, users []string) (int64, error) {
-	modules, err := buildRoleUser(roleId, users)
-	if err != nil {
-		return -1, err
+	modules := make([]userRole, 0)
+	for _, u := range users {
+		modules = append(modules, userRole{UserId: u, RoleId: roleId})
 	}
 	sts := q.NewStatements(true)
-
 	deleteModules := fmt.Sprintf("delete from userroles where roleId = %s", s.BuildParam(1))
 	sts.Add(deleteModules, []interface{}{roleId})
 	if modules != nil {
@@ -248,14 +245,4 @@ func (s *RoleAdapter) AssignRole(ctx context.Context, roleId string, users []str
 	}
 
 	return sts.Exec(ctx, s.db)
-}
-func buildRoleUser(roleId string, users []string) ([]userRole, error) {
-	if users == nil || len(users) <= 0 {
-		return nil, nil
-	}
-	modules := make([]userRole, 0)
-	for _, u := range users {
-		modules = append(modules, userRole{UserId: u, RoleId: roleId})
-	}
-	return modules, nil
 }
