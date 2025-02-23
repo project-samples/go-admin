@@ -153,7 +153,7 @@ func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
 	}
 	rolesHandler := code.NewCodeHandlerByConfig(rolesLoader.Load, cfg.Role.Handler, logError)
 
-	roleHandler, err := r.NewRoleTransport(db, cfg.Sql.Role.Check, logError, templates, cfg.Tracking, writeLog, cfg.Action)
+	roleHandler, err := r.NewRoleTransport(db, logError, templates, cfg.Tracking, writeLog, cfg.Action)
 	if err != nil {
 		return nil, err
 	}

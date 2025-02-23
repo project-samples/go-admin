@@ -163,7 +163,7 @@ func (s *UserAdapter) Patch(ctx context.Context, user map[string]interface{}) (i
 
 func (s *UserAdapter) Delete(ctx context.Context, id string) (int64, error) {
 	if len(s.CheckDelete) > 0 {
-		exist, er0 := checkExist(s.db, s.CheckDelete, id)
+		exist, er0 := q.Exist(ctx, s.db, s.CheckDelete, id)
 		if exist || er0 != nil {
 			return -1, er0
 		}
@@ -176,17 +176,6 @@ func (s *UserAdapter) Delete(ctx context.Context, id string) (int64, error) {
 	deleteRole := fmt.Sprintf("delete from users where userId = %s", s.BuildParam(1))
 	sts.Add(deleteRole, []interface{}{id})
 	return sts.Exec(ctx, s.db)
-}
-func checkExist(db *sql.DB, sql string, args ...interface{}) (bool, error) {
-	rows, err := db.Query(sql, args...)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		return true, nil
-	}
-	return false, nil
 }
 
 func (s *UserAdapter) GetUserByRole(ctx context.Context, roleId string) ([]User, error) {

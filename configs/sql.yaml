@@ -28,5 +28,3 @@ sql:
       inner join roleModules rm on r.roleId = rm.roleId
       inner join modules m on rm.moduleId = m.moduleId
     where u.userId = ? and u.status = 'A' and r.status = 'A' and rm.moduleId = ? and m.status = 'A'
-  role:
-    check: select userId from userRoles where roleId = ? limit 1

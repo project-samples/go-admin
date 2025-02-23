@@ -40,14 +40,11 @@ type Config struct {
 	Redis        redis.Config           `mapstructure:"redis"`
 }
 type SqlStatement struct {
-	Privileges        string        `mapstructure:"privileges"`
-	PrivilegesByUser  string        `mapstructure:"privileges_by_user"`
-	PermissionsByUser string        `mapstructure:"permissions_by_user"`
-	Role              RoleStatement `mapstructure:"role"`
+	Privileges        string `mapstructure:"privileges"`
+	PrivilegesByUser  string `mapstructure:"privileges_by_user"`
+	PermissionsByUser string `mapstructure:"permissions_by_user"`
 }
-type RoleStatement struct {
-	Check string `mapstructure:"check"`
-}
+
 type SessionConfig struct {
 	Secret      string        `yaml:"secret" mapstructure:"secret"`
 	ExpiredTime time.Duration `mapstructure:"expired_time"`

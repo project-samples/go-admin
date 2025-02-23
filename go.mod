@@ -10,7 +10,7 @@ require (
 	github.com/core-go/redis v1.0.3
 	github.com/core-go/search v1.2.0
 	github.com/core-go/security v0.1.4
-	github.com/core-go/sql v0.6.4
+	github.com/core-go/sql v0.6.5
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9

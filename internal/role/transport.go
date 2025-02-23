@@ -26,7 +26,7 @@ type RoleTransport interface {
 	AssignRole(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRoleTransport(db *sql.DB, checkDelete string, logError core.Log, templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog core.WriteLog, action *core.ActionConfig) (RoleTransport, error) {
+func NewRoleTransport(db *sql.DB, logError core.Log, templates map[string]*template.Template, tracking builder.TrackingConfig, writeLog core.WriteLog, action *core.ActionConfig) (RoleTransport, error) {
 	validator, err := v.NewValidator[*Role]()
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func NewRoleTransport(db *sql.DB, checkDelete string, logError core.Log, templat
 	if err != nil {
 		return nil, err
 	}
-	roleRepository, er6 := NewRoleAdapter(db, checkDelete) // cfg.Sql.Role.Check)
+	roleRepository, er6 := NewRoleAdapter(db) // cfg.Sql.Role.Check)
 	if er6 != nil {
 		return nil, er6
 	}
