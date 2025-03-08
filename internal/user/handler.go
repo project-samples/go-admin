@@ -21,7 +21,7 @@ func NewUserHandler(
 ) *UserHandler {
 	userType := reflect.TypeOf(User{})
 	builder := builder.NewBuilderByConfig[User](nil, tracking)
-	attributes := core.CreateAttributes(userType, logError, action, writeLog)
+	attributes := core.CreateAttributes(userType, logError, writeLog, action)
 	searchHandler := search.NewSearchHandler[User, *UserFilter](find, logError, nil)
 	return &UserHandler{SearchHandler: searchHandler, service: userService, validate: validate, builder: builder, Attributes: attributes}
 }

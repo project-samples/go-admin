@@ -8,8 +8,8 @@ github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UF
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/core-go/authentication v0.3.8 h1:H9pDuaK123mhzxAT8FxPhmuYClumI8q7KOR/xLHmKLg=
 github.com/core-go/authentication v0.3.8/go.mod h1:fIn6qbXCsfci9wkjc4Xvikrha0cQ4WE1svcadaJH4Qg=
-github.com/core-go/core v1.2.9 h1:FSrSgO3t94WZp82r9LzSqgqS/swsdRwFcAbL/ouoeeY=
-github.com/core-go/core v1.2.9/go.mod h1:6clsy/zJTzOZTX14L9bMCxX20uDlJKz+eiVglBYJXLM=
+github.com/core-go/core v1.0.5 h1:MM6wYbtKy5zdeHI3qxeSYgTK353nzi4HZ8zD5xqO2zg=
+github.com/core-go/core v1.0.5/go.mod h1:6clsy/zJTzOZTX14L9bMCxX20uDlJKz+eiVglBYJXLM=
 github.com/core-go/health v1.2.1 h1:tbq175/VmO3BQhAMBLCmU2vPaiGBjUMxD4ypxSwMFkQ=
 github.com/core-go/health v1.2.1/go.mod h1:7J9YQqCPSZW5+5BLVtZPQ/FULyk+LHZgSTnWFdL+oP0=
 github.com/core-go/log v1.0.9 h1:QGhJB8WOGBvcIt1YrSPqbupusCnYHhd4IMNsthyBY0Y=

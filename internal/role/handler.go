@@ -21,7 +21,7 @@ func NewRoleHandler(
 ) *RoleHandler {
 	roleType := reflect.TypeOf(Role{})
 	builder := builder.NewBuilderByConfig[Role](nil, tracking)
-	params := core.CreateAttributes(roleType, logError, action, writeLog)
+	params := core.CreateAttributes(roleType, logError, writeLog, action)
 	searchHandler := search.NewSearchHandler[Role, *RoleFilter](find, logError, nil)
 	return &RoleHandler{SearchHandler: searchHandler, service: roleService, validate: validate, builder: builder, Attributes: params}
 }
