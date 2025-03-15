@@ -6,7 +6,7 @@ import (
 )
 
 func NewCountryHandler(search s.Search[Country, *CountryFilter], service CountryService, logError core.Log, validate core.Validate[*Country], writeLog core.WriteLog, action *core.ActionConfig) CountryTransport {
-	handler := core.NewhandlerWithLog[Country, string](service, logError, validate, action, writeLog)
+	handler := core.NewhandlerWithLog[Country, string](service, logError, validate, writeLog, action)
 	searchHandler := s.NewSearchHandler[Country, *CountryFilter](search, logError, nil)
 	return &CountryHandler{Handler: handler, SearchHandler: searchHandler}
 }

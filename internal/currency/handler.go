@@ -6,7 +6,7 @@ import (
 )
 
 func NewCurrencyHandler(search s.Search[Currency, *CurrencyFilter], service CurrencyService, logError core.Log, validate core.Validate[*Currency], writeLog core.WriteLog, action *core.ActionConfig) CurrencyTransport {
-	handler := core.NewhandlerWithLog[Currency, string](service, logError, validate, action, writeLog)
+	handler := core.NewhandlerWithLog[Currency, string](service, logError, validate, writeLog, action)
 	searchHandler := s.NewSearchHandler[Currency, *CurrencyFilter](search, logError, nil)
 	return &CurrencyHandler{Handler: handler, SearchHandler: searchHandler}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func NewLocaleHandler(search s.Search[Locale, *LocaleFilter], service LocaleService, logError core.Log, validate core.Validate[*Locale], writeLog core.WriteLog, action *core.ActionConfig) LocaleTransport {
-	hdl := core.NewhandlerWithLog[Locale, string](service, logError, validate, action, writeLog)
+	hdl := core.NewhandlerWithLog[Locale, string](service, logError, validate, writeLog, action)
 	searchHandler := s.NewSearchHandler[Locale, *LocaleFilter](search, logError, nil)
 	return &LocaleHandler{Handler: hdl, SearchHandler: searchHandler}
 }
